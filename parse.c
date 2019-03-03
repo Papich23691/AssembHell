@@ -1,9 +1,25 @@
 #include "parse.h"
+#include "memory.h"
 #include <string.h>
 
 #define OPCODE_BITS 32
 #define FIRST_BITS 4
 #define SECOND_BITS 1024
+#define DIRECT_REG 5
+#define DIRECT 3
+#define IMMEDIATE 1
+#define MAX_VALUE 4096
+
+int find_opcode(char *tok)
+{
+    int i;
+    for (i = 0; i < OPCODE_NUM; i++)
+    {
+        if (!strcmp(tok, opcode[i]))
+            break;
+    }
+    return i;
+}
 
 int is_type(char *token, int type)
 {
@@ -23,7 +39,7 @@ int is_type(char *token, int type)
         ret = (!strcmp(token, ".entry")) ? 1 : 0;
         break;
     case CODE:
-        for (int i = 0; i < 16; i++)
+        for (i = 0; i < OPCODE_NUM; i++)
             ret |= (!strcmp(token, opcode[i])) ? 1 : 0;
         break;
     case REGISTER:
@@ -31,8 +47,13 @@ int is_type(char *token, int type)
         break;
     case NUMBER:
         ret = (isdigit(token[0]) || token[0] == '+' || token[0] == '-') ? 1 : 0;
-        for (int i = 1; i < strlen(token); i++)
+        for (i = 1; i < strlen(token); i++)
             ret &= isdigit(token[i]);
+        break;
+    case LABELN:
+        ret = ((token[0] >= 'A' && token[0] <= 'Z') || (token[0] >= 'a' && token[0] <= 'z')) ? 1 : 0;
+        for (i = 1; i < strlen(token); i++)
+            ret &= ((token[1] >= 'A' && token[i] <= 'Z') || (token[i] >= 'a' && token[i] <= 'z') || (token[i] >= '0' && token[i] <= '9')) ? 1 : 0;
         break;
     default:
         break;
@@ -42,31 +63,83 @@ int is_type(char *token, int type)
 
 int parse_code(char *tok, char *line, int *parse)
 {
-    int i;
     char *args = line;
-    for (i = 0; i < 16; i++)
-    {
-        if (!strcmp(tok, opcode[i]))
-            break;
-    }
-    if (i == 16)
-        return 1; //error
+    int i = find_opcode(tok);
+    if (i == OPCODE_NUM)
+        //error
+        return 1;
     parse += OPCODE_BITS * i;
-    args = strtok(line, " ,");
-    if (i <= 3 || i == 6)
+    args = strtok(args, " ,");
+    if (i <= SUB || i == LEA)
     {
-        if (is_type(args, REGISTER))
-            parse += 5 * FIRST_BITS;
-        //else if () num and labels for first 
-               
+        if (is_type(args, REGISTER) && i != LEA)
+            parse += DIRECT_REG * SECOND_BITS;
+        else if (is_type(args, NUMBER) && i != LEA)
+            parse += IMMEDIATE * SECOND_BITS;
+        else if (is_type(args, LABELN))
+            parse += DIRECT * SECOND_BITS;
+        else
+        {
+            /* error, unkown label  */
+            return 1;
+        }
+        args = strtok(NULL, " ,");
+        if (is_type(args, NUMBER) && i != CMP)
+        {
+            /* cant accept number */
+            return 1;
+        }
+        else if (is_type(args, NUMBER) && i == CMP)
+            parse += DIRECT_REG * FIRST_BITS;
+        else if (is_type(args, NUMBER))
+            parse += IMMEDIATE * FIRST_BITS;
+        else if (is_type(args, LABELN))
+            parse += DIRECT * FIRST_BITS;
+        else
+        {
+            /* error, unkown label  */
+            return 1;
+        }
+
         //2 arguments
     }
-    else if (4 == i || i == 5 || (6 < i && i < 14))
+    else if (i == NOT || i == CLR || (LEA < i && i < RTS))
     {
-        if (is_type(args, REGISTER))
-            parse += 5 * FIRST_BITS;
-        //else if () num and labels for first 
+        if (is_type(args, NUMBER) && i != PRN)
+        {
+            /* cant accept number */
+            return 1;
+        }
+        else if (is_type(args, NUMBER) && i == PRN)
+            parse += DIRECT_REG * FIRST_BITS;
+        else if (is_type(args, NUMBER))
+            parse += IMMEDIATE * FIRST_BITS;
+        else if (is_type(args, LABELN))
+            parse += DIRECT * FIRST_BITS;
+        else
+        {
+            /* error, unkown label  */
+            return 1;
+        }
+
         //1 argument
+    }
+    return 0;
+}
+
+int parse_data(char *tok, int data_type, int *parse)
+{
+    if (data_type)
+    {
+        parse += (int)*tok;
+    }
+    else
+    {
+        if (is_type(tok, NUMBER) && atoi(tok) < MAX_VALUE) //TODO check number of bits
+            *parse += atoi(tok);
+        else
+            //error
+            return 1;
     }
     return 0;
 }

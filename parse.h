@@ -5,6 +5,8 @@
 #include "memory.h"
 #include "files.h"
 
+#define OPCODE_NUM 16
+
 enum types
 {
     LABEL,
@@ -13,12 +15,36 @@ enum types
     CODE,
     ENTRY,
     REGISTER,
-    NUMBER
+    NUMBER,
+    LABELN
 };
 
-char *opcode[16] = {"mov", "cmp", "add", "sub", "not", "clr", "lea", "inc", "dec", "jmp", "bne", "red", "prn", "jsr", "rts", "stop"};
+enum opcodes
+{
+    MOV,
+    CMP,
+    ADD,
+    SUB,
+    NOT,
+    CLR,
+    LEA,
+    INC,
+    DEC,
+    JMP,
+    BNE,
+    RED,
+    PRN,
+    JSR,
+    RTS,
+    STOP
+};
+
+char *opcode[OPCODE_NUM] = {"mov", "cmp", "add", "sub", "not", "clr", "lea", "inc", "dec", "jmp", "bne", "red", "prn", "jsr", "rts", "stop"};
 
 int is_type(char *token, int type);
 int parse_code(char *tok, char *line,int * parse);
+int find_opcode(char *tok);
+int parse_data(char *tok, int data_type, int *parse);
+
 
 #endif

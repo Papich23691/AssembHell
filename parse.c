@@ -88,9 +88,9 @@ int parse_code(char *tok, char *line, int *parse)
             return 1;
         }
         else if (is_type(args, NUMBER) && i == CMP)
-            parse += DIRECT_REG * FIRST_BITS;
-        else if (is_type(args, NUMBER))
             parse += IMMEDIATE * FIRST_BITS;
+        else if (is_type(args, REGISTER))
+            parse += DIRECT_REG * FIRST_BITS;
         else if (is_type(args, LABELN))
             parse += DIRECT * FIRST_BITS;
         else
@@ -109,9 +109,9 @@ int parse_code(char *tok, char *line, int *parse)
             return 1;
         }
         else if (is_type(args, NUMBER) && i == PRN)
-            parse += DIRECT_REG * FIRST_BITS;
-        else if (is_type(args, NUMBER))
             parse += IMMEDIATE * FIRST_BITS;
+        else if (is_type(args, REGISTER))
+            parse += DIRECT_REG * FIRST_BITS;
         else if (is_type(args, LABELN))
             parse += DIRECT * FIRST_BITS;
         else

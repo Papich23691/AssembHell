@@ -11,14 +11,15 @@
 #define MAX_UINT    (2 ^ WORD_SIZE)
 
 typedef struct n {
-    int value:12;
+    int value:WORD_SIZE;
     struct n * next;
 } node;
 
 typedef struct l {
     char * type;
     char * name;
-    int value:12;
+    int address;
+    int value:WORD_SIZE;
     struct l * next;
 } label;
 

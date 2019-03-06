@@ -143,7 +143,7 @@ int update_code(int run, char *tok, char *line, node *Code)
         }
         //////////////////////////////////////////////////////////////////// 1 argument ^^^^^^^^ //
         args = strtok(NULL, " ,");
-        if (strlen(args))
+        if (args)
             //error אחשלי
             return 1;
     }

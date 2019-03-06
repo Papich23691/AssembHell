@@ -1,5 +1,6 @@
 #include "memory.h"
 #include "parse.h"
+#include ""
 
 #define REGISTER_NUM 2
 #define REGISTER_SIZE 3
@@ -7,10 +8,9 @@
 #define DEST_REGISTER 4
 
 int DC, IC;
-extern int line;
-extern char *filename;
 
-int update_code(int run, char *tok, char *line, node *Code)
+
+int update_code(int run,char * tok, char * line_s , unsigned int line_index, char *fname)
 {
     int parse = 0, i = 0;
 

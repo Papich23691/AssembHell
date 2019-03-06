@@ -12,14 +12,15 @@ extern char *filename;
 
 int update_code(int run, char *tok, char *line, node *Code)
 {
+    int parse = 0, i = 0;
+
     if (!run)
     {
-        int parse = 0;
-        if (parse_code(tok, line, &parse))
-            //error
+        if (parse_code(tok, line, &parse)) /* error */
             return 1;
-        //add opcode parse to data base
-        int i = find_opcode(tok);
+
+        /* add opcode parse to data base */
+        i = find_opcode(tok);
         if (i == OPCODE_NUM)
             //error UNKOWN OPCODE
             return 1;
@@ -89,6 +90,7 @@ int update_code(int run, char *tok, char *line, node *Code)
             }
             else if (is_type(args, NUMBER)) //TODO check number of bits
             {
+                
                 parse += atoi(args) * DEST_REGISTER;
             }
             else if (is_type(args, LABELN))
@@ -163,7 +165,6 @@ int update_data(char *tok, char *line, node *Data)
         {
 
             if (parse_data(args, NUM_DATA, &parse))
-                //error
                 return 1;
             DC++;
             //TODO add to database
@@ -173,7 +174,6 @@ int update_data(char *tok, char *line, node *Data)
     else
     {
         if (line[0] != '"' || line[strlen(line) - 1] != '"')
-            //error
             return 1;
         int i;
         for (i = 1; i < strlen(line); i++)

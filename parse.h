@@ -9,7 +9,7 @@
 
 enum types
 {
-    LABEL,
+    LABEL = 0,
     DATA,
     EXTERN,
     CODE,
@@ -21,7 +21,7 @@ enum types
 
 enum opcodes
 {
-    MOV,
+    MOV = 0,
     CMP,
     ADD,
     SUB,

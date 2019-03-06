@@ -13,11 +13,8 @@
 int find_opcode(char *tok)
 {
     int i;
-    for (i = 0; i < OPCODE_NUM; i++)
-    {
-        if (!strcmp(tok, opcode[i]))
-            break;
-    }
+    for (i = 0; i < OPCODE_NUM && strcmp(tok, opcode[i]); i++);
+
     return i;
 }
 
@@ -65,9 +62,10 @@ int parse_code(char *tok, char *line, int *parse)
 {
     char *args = line;
     int i = find_opcode(tok);
-    if (i == OPCODE_NUM)
-        //error
+    
+    if (i == OPCODE_NUM) /* error */
         return 1;
+        
     parse += OPCODE_BITS * i;
     args = strtok(args, " ,");
     if (i <= SUB || i == LEA)

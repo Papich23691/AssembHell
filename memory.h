@@ -4,8 +4,11 @@
 #include <stdio.h>
 #include "files.h"
 
-#define NUM_DATA 0
-#define CHAR_DATA 1
+#define NUM_DATA    (0)
+#define CHAR_DATA   (1)
+#define WORD_SIZE   (12)
+#define MAX_INT     (2 ^ (WORD_SIZE - 1))
+#define MAX_UINT    (2 ^ WORD_SIZE)
 
 typedef struct n {
     int value:12;

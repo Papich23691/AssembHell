@@ -13,20 +13,26 @@ char *filename;
 
 int main(int argc, char *argv[])
 {
-    int i;
+    char *name = NULL, *line = NULL;
+    FILE *file = NULL;
+    int i, j = 0;
+
     for (i = 0; argv[i]; i++)
     {
+        /* Initializtions */
+        name = argv[i]
         filename = argv[i];
         error = 0;
+        DC = 0;
+        IC = 0;
+
+        strcat(name, ".as");
+
+        file = fopen(name, "r");
         node *Data = (node *)malloc(sizeof(node *));
         node *Code = (node *)malloc(sizeof(node *));
         label *Labels = (label *)malloc(sizeof(label *));
-        DC = 0;
-        IC = 0;
-        char *name = argv[i];
-        strcat(name, ".as");
-        FILE *file = fopen(name, "r");
-        char *line;
+
         while (fgets(line, sizeof(line), file))
         {
             if (line[0] != ';' || line[0] != '\n')
@@ -61,7 +67,9 @@ int main(int argc, char *argv[])
                 line++;
             }
         }
+
         fclose(file);
+
         if (error)
         {
             free(Labels);
@@ -69,7 +77,7 @@ int main(int argc, char *argv[])
             free(Data);
             return 1;
         }
-        int j;
+
         label *point = (label *)malloc(sizeof(label *));
         point = Labels;
         while (point)

@@ -32,11 +32,11 @@ int main(int argc, char *argv[])
         code = (node_t *)malloc(sizeof(node_t *));
         labels = (label *)malloc(sizeof(label *));
 
-        while (fgets(line, sizeof(line), file))
+        while (fgets(line_s, sizeof(line_s), file))
         {
-            if (line[0] != ';' || line[0] != '\n')
+            if (line_s[0] != ';' || line_s[0] != '\n')
             {
-                tok = strtok(line, " ");
+                tok = strtok(line_s, " ");
                 flag = 0;
                 label = "";
 
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
                 {
                     if (flag)
                         error += add_data_label(label, labels);
-                    error += update_data(tok, line, data);
+                    error += update_data(tok, line_s, data);
                     continue;
                 }
                 else if (is_type(tok, EXTERN))
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
                 {
                     if (flag)
                         error += add_code_label(label);
-                    error += update_code(0, tok, line, line, );
+                    error += update_code(0, tok, line_s, line_index, name);
                 }
 
                 ++line_index;
@@ -90,32 +90,29 @@ int main(int argc, char *argv[])
         free(point);
 
         IC = 0;
-        line = 0;
         file = fopen(name, "r");
 
-        while (fgets(line, sizeof(line), file))
+        while (fgets(line_s, sizeof(line_s), file))
         {
-            if (line[0] != ';' && line[0] != '\n')
+            if (line_s[0] != ';' && line_s[0] != '\n')
             {
-                char *tok = strtok(line, " ");
+                char *tok = strtok(line_s, " ");
                 if (is_type(tok, DATA) || is_type(tok, EXTERN))
                     continue;
                 if (is_type(tok, LABEL))
                     tok = strtok(NULL, " ");
                 if (is_type(tok, ENTRY))
                 {
-                    error += update_entry(line);
+                    error += update_entry(line_s);
                     continue;
                 }
                 if (is_type(tok, CODE))
-                    error += update_code(1, tok, line, code, names);
-                line++;
+                    error += update_code(1, tok, line_s, line_index, name);
+                ++line_index;
             }
         }
-        
         if (error)
             return 1;
-        
         create_files(code, data, labels, argv[i]);
         
         free(labels);

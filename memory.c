@@ -1,6 +1,5 @@
 #include "memory.h"
 #include "parse.h"
-#include ""
 
 #define REGISTER_NUM 2
 #define REGISTER_SIZE 3
@@ -9,8 +8,7 @@
 
 int DC, IC;
 
-
-int update_code(int run,char * tok, char * line_s , unsigned int line_index, char *fname)
+int update_code(int run, char *tok, char *line_s, unsigned int line_index, char *fname)
 {
     int parse = 0, i = 0;
 
@@ -56,7 +54,7 @@ int update_code(int run,char * tok, char * line_s , unsigned int line_index, cha
             else if (is_type(args, LABELN))
             {
                 parse += 2;
-                 //add LABELN (if exists if not add space in memory)
+                //add LABELN (if exists if not add space in memory)
                 // parse+= 1 if extern
             }
             else
@@ -90,13 +88,13 @@ int update_code(int run,char * tok, char * line_s , unsigned int line_index, cha
             }
             else if (is_type(args, NUMBER)) //TODO check number of bits
             {
-                
+
                 parse += atoi(args) * DEST_REGISTER;
             }
             else if (is_type(args, LABELN))
             {
                 parse += 2;
-                 //add LABELN (if exists if not add space in memory)
+                //add LABELN (if exists if not add space in memory)
                 // parse+= 1 if extern
             }
             else
@@ -184,4 +182,28 @@ int update_data(char *tok, char *line, node *Data)
         //TODO add '\0' to database
     }
     return 0;
+}
+
+bool is_valid_label(char *label)
+{
+    int i;
+
+    if (!label || !IS_ALPHABET(label[0]))
+        return false;
+
+    /* Make sure the label is valid. */
+    for (i = 1; i < strlen(label); ++i)
+    {
+        if (!IS_ALPHABET(label[i]) || !IS_NUMERIC(label[i]))
+            return false;
+    }
+
+    /* Check if the user used a keyword */
+    for (i = 0; i < CNT_KWORDS; ++i)
+    {
+        if (!strcmp(label, opcode[i]))
+            return false;
+    }
+
+    return true;
 }

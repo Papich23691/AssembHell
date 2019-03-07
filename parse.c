@@ -13,7 +13,7 @@
 int find_opcode(char *tok)
 {
     int i;
-    for (i = 0; i < OPCODE_NUM && strcmp(tok, opcode[i]); i++);
+    for (i = 0; i < OPCODE_NUM && strcmp(tok, key_words[i]); i++);
 
     return i;
 }
@@ -37,7 +37,7 @@ int is_type(char *token, int type)
         break;
     case CODE:
         for (i = 0; i < OPCODE_NUM; i++)
-            ret |= (!strcmp(token, opcode[i])) ? 1 : 0;
+            ret |= (!strcmp(token, key_words[i])) ? 1 : 0;
         break;
     case REGISTER:
         ret = (token[0] == '@' && token[1] == 'r') ? 1 : 0;
@@ -48,9 +48,7 @@ int is_type(char *token, int type)
             ret &= isdigit(token[i]);
         break;
     case LABELN:
-        ret = ((token[0] >= 'A' && token[0] <= 'Z') || (token[0] >= 'a' && token[0] <= 'z')) ? 1 : 0;
-        for (i = 1; i < strlen(token); i++)
-            ret &= ((token[1] >= 'A' && token[i] <= 'Z') || (token[i] >= 'a' && token[i] <= 'z') || (token[i] >= '0' && token[i] <= '9')) ? 1 : 0;
+        ret = is_valid_label(token) ? 1 : 0;
         break;
     default:
         break;
@@ -63,7 +61,7 @@ int parse_code(char *tok, char *line, int *parse)
     char *args = line;
     int i = find_opcode(tok);
     
-    if (i == OPCODE_NUM) /* error */
+    if (i >= OPCODE_NUM) /* error */
         return 1;
         
     parse += OPCODE_BITS * i;
@@ -140,4 +138,29 @@ int parse_data(char *tok, int data_type, int *parse)
             return 1;
     }
     return 0;
+}
+
+
+bool is_valid_label(char *label)
+{
+    int i;
+
+    if (!label || !IS_ALPHABET(label[0]))
+        return false;
+
+    /* Make sure the label is valid. */
+    for (i = 1; i < strlen(label); ++i)
+    {
+        if (!IS_ALPHABET(label[i]) || !IS_NUMERIC(label[i]))
+            return false;
+    }
+
+    /* Check if the user used a keyword */
+    for (i = 0; i < CNT_KWORDS; ++i)
+    {
+        if (!strcmp(label, key_words[i]))
+            return false;
+    }
+
+    return true;
 }

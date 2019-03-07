@@ -12,25 +12,22 @@ extern int DC, IC;
 int main(int argc, char *argv[])
 {
     char *name = NULL, *line_s = NULL, *tok = NULL, *label = NULL;
-    node_t *data = NULL, *code = NULL;
     unsigned int line_index = 0;
-    int i, j = 0, flag = 0;
+    int i,error, j = 0, flag = 0;
     label_t *labels = NULL;
     FILE *file = NULL;
 
     for (i = 0; argv[i]; i++)
     {
         /* Initializtions */
-        name = argv[i] error = 0;
+        name = argv[i];
+        error = 0;
         DC = 0;
         IC = 0;
 
         strcat(name, ".as");
 
         file = fopen(name, "r");
-        data = (node_t *)malloc(sizeof(node_t *));
-        code = (node_t *)malloc(sizeof(node_t *));
-        labels = (label *)malloc(sizeof(label *));
 
         while (fgets(line_s, sizeof(line_s), file))
         {
@@ -62,7 +59,7 @@ int main(int argc, char *argv[])
                 {
                     if (flag)
                         error += add_code_label(label);
-                    error += update_code(0, tok, line_s, line_index, name);
+                    error += update_code(0, tok, line_s, line_index, name,code);
                 }
 
                 ++line_index;
@@ -71,15 +68,12 @@ int main(int argc, char *argv[])
 
         fclose(file);
 
-        if (error)
-        {
-            free(labels);
-            free(code);
-            free(data);
+        if (error){
             return 1;
+            //create_error_file
         }
 
-        label *point = (label *)malloc(sizeof(label *));
+        /*label *point = (label *)malloc(sizeof(label *));
         point = labels;
         while (point)
         {
@@ -88,7 +82,7 @@ int main(int argc, char *argv[])
             point = point->next;
         }
         free(point);
-
+        */
         IC = 0;
         file = fopen(name, "r");
 
@@ -107,12 +101,14 @@ int main(int argc, char *argv[])
                     continue;
                 }
                 if (is_type(tok, CODE))
-                    error += update_code(1, tok, line_s, line_index, name);
+                    error += update_code(1, tok, line_s, line_index, name,code);
                 ++line_index;
             }
         }
-        if (error)
+        if (error){
             return 1;
+            //create_error_file
+        }
         create_files(code, data, labels, argv[i]);
         
         free(labels);

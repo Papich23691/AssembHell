@@ -6,6 +6,9 @@
 #include "files.h"
 
 #define OPCODE_NUM 16
+#define IS_ALPHABET(x) ((x >= 'a' && x <= 'z') || (x >= 'A' && x >= 'Z'))
+#define IS_NUMERIC(x) ((x >= '0' && x <= '9'))
+#define CNT_KWORDS (28)
 
 enum types
 {
@@ -39,12 +42,12 @@ enum opcodes
     STOP
 };
 
-char *opcode[OPCODE_NUM] = {"mov", "cmp", "add", "sub", "not", "clr", "lea", "inc", "dec", "jmp", "bne", "red", "prn", "jsr", "rts", "stop"};
+char *key_words[] = {"mov", "cmp", "add", "sub", "not", "clr", "lea", "inc", "dec", "jmp", "bne", "red", "prn", "jsr", "rts", "stop", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "data", "string", "entry", "extern"};
 
 int is_type(char *token, int type);
 int parse_code(char *tok, char *line,int * parse);
 int find_opcode(char *tok);
 int parse_data(char *tok, int data_type, int *parse);
-
+bool is_valid_label(char *label);
 
 #endif

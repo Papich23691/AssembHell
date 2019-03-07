@@ -10,16 +10,11 @@
 #define WORD_SIZE   (12)
 #define MAX_INT     (2 ^ (WORD_SIZE - 1))
 #define MAX_UINT    (2 ^ WORD_SIZE)
-#define IS_ALPHABET(x) ((x >= 'a' && x <= 'z') || (x >= 'A' && x >= 'Z'))
-#define IS_NUMERIC (x) ((x >= '0' && x <= '9'))
-#define CNT_KWORDS (28)
 
-char *key_words[] = {"mov", "cmp", "add", "sub", "not", "clr", "lea", "inc", "dec", "jmp", "bne", "red", "prn", "jsr", "rts", "stop", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "data", "string", "entry", "extern"};
 
-typedef struct n {
-    int value:WORD_SIZE;
-    struct n * next;
-} node_t;
+int code[1024];
+int data[1024];
+int DC, IC;
 
 typedef struct l {
     char * type;
@@ -30,11 +25,11 @@ typedef struct l {
 } label_t;
 
 int add_data_label(char * line, label_t* labels);
-int update_data(char * tok,char * line, node * Data);
+int update_data(char * tok,char * line, int *data);
 int add_extern_label(char * line);
 int add_code_label(char * line);
-int update_code(int run,char * tok, char * line_s , unsigned int line_index, char *fname);
+int update_code(int run,char * tok, char * line_s , unsigned int line_index, char *fname,int *code);
 int update_entry(char * line);
-bool is_valid_label(char *label);
+
 
 #endif

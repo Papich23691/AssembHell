@@ -6,23 +6,22 @@
 #define SOURCE_REGISTER 128
 #define DEST_REGISTER 4
 
-int DC, IC;
-
-int update_code(int run, char *tok, char *line_s, unsigned int line_index, char *fname)
+int update_code(int run, char *tok, char *line_s, unsigned int line_index, char *fname,int *code)
 {
     int parse = 0, i = 0;
 
     if (!run)
     {
-        if (parse_code(tok, line, &parse)) /* error */
+        if (parse_code(tok, line_s, &parse)) /* error */
             return 1;
 
-        /* add opcode parse to data base */
+        code[IC]=parse;
+        IC++;
         i = find_opcode(tok);
         if (i == OPCODE_NUM)
             //error UNKOWN OPCODE
             return 1;
-        char *args = line;
+        char *args = line_s;
         args = strtok(args, " ,");
         if (!args)
             //not enough arguments
@@ -69,7 +68,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 return 1;
             if (!reg)
             {
-                //add to database
+                code[IC]=parse;
                 parse = 0;
             }
             IC++;
@@ -103,12 +102,12 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 return 1;
             }
             /*************************** second argument ^^^^^^ *********************************************/
-            //add to database
+            code[IC]=parse;
+            IC++;
         }
         //////////////////////////////////////////////////////////////////// 2 arguments ^^^^^^^ //
         else if (i == NOT || i == CLR || (LEA < i && i < RTS))
         {
-            IC++;
             if (is_type(args, REGISTER))
             {
                 if (strlen(args) < REGISTER_SIZE)
@@ -140,6 +139,8 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
             }
         }
         //////////////////////////////////////////////////////////////////// 1 argument ^^^^^^^^ //
+        code[IC]=parse;
+        IC++;
         args = strtok(NULL, " ,");
         if (args)
             //error אחשלי
@@ -153,7 +154,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
     return 0;
 }
 
-int update_data(char *tok, char *line, node *Data)
+int update_data(char *tok, char *line,int *data)
 {
     char *args = line;
     int parse = 0;
@@ -164,8 +165,8 @@ int update_data(char *tok, char *line, node *Data)
 
             if (parse_data(args, NUM_DATA, &parse))
                 return 1;
+            data[DC]=parse;
             DC++;
-            //TODO add to database
             args = strtok(NULL, " ,");
         }
     }
@@ -177,33 +178,11 @@ int update_data(char *tok, char *line, node *Data)
         for (i = 1; i < strlen(line); i++)
         {
             parse_data(args + i, CHAR_DATA, &parse);
-            //TODO add to database
+            data[DC]=parse;
+            DC++;
         }
-        //TODO add '\0' to database
+        data[DC]=0;
+        DC++;
     }
     return 0;
-}
-
-bool is_valid_label(char *label)
-{
-    int i;
-
-    if (!label || !IS_ALPHABET(label[0]))
-        return false;
-
-    /* Make sure the label is valid. */
-    for (i = 1; i < strlen(label); ++i)
-    {
-        if (!IS_ALPHABET(label[i]) || !IS_NUMERIC(label[i]))
-            return false;
-    }
-
-    /* Check if the user used a keyword */
-    for (i = 0; i < CNT_KWORDS; ++i)
-    {
-        if (!strcmp(label, opcode[i]))
-            return false;
-    }
-
-    return true;
 }

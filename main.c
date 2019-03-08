@@ -8,7 +8,7 @@
 #define START 100
 
 extern int DC, IC;
-
+extern err_node_t *error_list;
 int main(int argc, char *argv[])
 {
     char *name = NULL, *line_s = NULL, *tok = NULL, *label = NULL;
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
                 {
                     if (flag)
                         error += add_data_label(label, labels);
-                    error += update_data(tok, line_s, data);
+                    error += update_data(tok, line_s, data,line_index,name);
                     continue;
                 }
                 else if (is_type(tok, EXTERN))
@@ -68,9 +68,9 @@ int main(int argc, char *argv[])
 
         fclose(file);
 
-        if (error){
+       if (error){
             return 1;
-            //create_error_file
+            create_error_file(error_list);
         }
 
         /*label *point = (label *)malloc(sizeof(label *));
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
         */
         IC = 0;
         file = fopen(name, "r");
-
+        line_index = 0;
         while (fgets(line_s, sizeof(line_s), file))
         {
             if (line_s[0] != ';' && line_s[0] != '\n')
@@ -104,10 +104,11 @@ int main(int argc, char *argv[])
                     error += update_code(1, tok, line_s, line_index, name,code);
                 ++line_index;
             }
+            ++line_index;
         }
         if (error){
             return 1;
-            //create_error_file
+            create_error_file(error_list);
         }
         create_files(code, data, labels, argv[i]);
         

@@ -1,6 +1,7 @@
 #include "parse.h"
 #include "memory.h"
 #include <string.h>
+#include <ctype.h>
 
 #define OPCODE_BITS 32
 #define FIRST_BITS 4
@@ -43,9 +44,10 @@ int is_type(char *token, int type)
         ret = (token[0] == '@' && token[1] == 'r') ? 1 : 0;
         break;
     case NUMBER:
-        ret = (isdigit(token[0]) || token[0] == '+' || token[0] == '-') ? 1 : 0;
+        ret = ((isdigit(token[0]) || token[0] == '+' || token[0] == '-')) ? 1 : 0;
         for (i = 1; i < strlen(token); i++)
             ret &= isdigit(token[i]);
+
         break;
     case LABELN:
         ret = is_valid_label(token) ? 1 : 0;
@@ -56,14 +58,15 @@ int is_type(char *token, int type)
     return ret;
 }
 
-int parse_code(char *tok, char *line, int *parse)
+int parse_code(char *tok, char *line, int *parse,unsigned int line_index,char *fname)
 {
     char *args = line;
     int i = find_opcode(tok);
     
-    if (i >= OPCODE_NUM) /* error */
+    if (i >= OPCODE_NUM){
+        add_front(&error_list,line_index,fname,"Unknown opcode");
         return 1;
-        
+    }
     parse += OPCODE_BITS * i;
     args = strtok(args, " ,");
     if (i <= SUB || i == LEA)
@@ -76,13 +79,13 @@ int parse_code(char *tok, char *line, int *parse)
             parse += DIRECT * SECOND_BITS;
         else
         {
-            /* error, unkown label  */
+            add_front(&error_list,line_index,fname,"Unknown label");
             return 1;
         }
         args = strtok(NULL, " ,");
         if (is_type(args, NUMBER) && i != CMP)
         {
-            /* cant accept number */
+            add_front(&error_list,line_index,fname,"Can't pass number as an argument");
             return 1;
         }
         else if (is_type(args, NUMBER) && i == CMP)
@@ -93,7 +96,7 @@ int parse_code(char *tok, char *line, int *parse)
             parse += DIRECT * FIRST_BITS;
         else
         {
-            /* error, unkown label  */
+            add_front(&error_list,line_index,fname,"Unknown label");
             return 1;
         }
 
@@ -103,7 +106,7 @@ int parse_code(char *tok, char *line, int *parse)
     {
         if (is_type(args, NUMBER) && i != PRN)
         {
-            /* cant accept number */
+            add_front(&error_list,line_index,fname,"Can't pass number as an argument");
             return 1;
         }
         else if (is_type(args, NUMBER) && i == PRN)
@@ -114,7 +117,7 @@ int parse_code(char *tok, char *line, int *parse)
             parse += DIRECT * FIRST_BITS;
         else
         {
-            /* error, unkown label  */
+            add_front(&error_list,line_index,fname,"Unknown label");
             return 1;
         }
 
@@ -123,7 +126,7 @@ int parse_code(char *tok, char *line, int *parse)
     return 0;
 }
 
-int parse_data(char *tok, int data_type, int *parse)
+int parse_data(char *tok, int data_type, int *parse,unsigned int line_index,char *fname)
 {
     if (data_type)
     {
@@ -131,10 +134,10 @@ int parse_data(char *tok, int data_type, int *parse)
     }
     else
     {
-        if (is_type(tok, NUMBER) && atoi(tok) < MAX_VALUE) //TODO check number of bits
+        if (is_type(tok, NUMBER) && atoi(tok) < MAX_VALUE) 
             *parse += atoi(tok);
         else
-            //error
+            add_front(&error_list,line_index,fname,"Wrong data type");
             return 1;
     }
     return 0;

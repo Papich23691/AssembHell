@@ -1,5 +1,6 @@
 #include "memory.h"
 #include "parse.h"
+#include <string.h>
 
 #define REGISTER_NUM 2
 #define REGISTER_SIZE 3
@@ -12,19 +13,19 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
 
     if (!run)
     {
-        if (parse_code(tok, line_s, &parse)) /* error */
+        if (parse_code(tok, line_s, &parse,line_index,fname)) /* error */
             return 1;
 
         code[IC]=parse;
         IC++;
         i = find_opcode(tok);
         if (i == OPCODE_NUM)
-            //error UNKOWN OPCODE
+            add_front(&error_list,line_index,fname,"Unknown opcode");
             return 1;
         char *args = line_s;
         args = strtok(args, " ,");
         if (!args)
-            //not enough arguments
+            add_front(&error_list,line_index,fname,"Not enough arguments");
             return 1;
         parse = 0;
         //////////////////////////////////////////////////////////////////// opcode stuff ^^^^^^^^^^^^^^^^^^^^^ //
@@ -34,19 +35,22 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
             int reg = 0;
             if (is_type(args, REGISTER))
             {
-                if (strlen(args) < REGISTER_SIZE)
-                    //unkown register number
+                if (strlen(args) < REGISTER_SIZE){
+                    add_front(&error_list,line_index,fname,"Unknown register number");
                     return 1;
-                else if (args[REGISTER_NUM] > '9' || args[REGISTER_NUM] < '0')
-                    //register is only number based
+                }
+                else if (args[REGISTER_NUM] > '9' || args[REGISTER_NUM] < '0'){
+                    add_front(&error_list,line_index,fname,"Registers represented by numbers");
                     return 1;
-                else if (strlen(args) > REGISTER_SIZE)
-                    // to much shit after @r
+                }
+                else if (strlen(args) > REGISTER_SIZE){
+                    add_front(&error_list,line_index,fname,"Register name longer than accepted");
                     return 1;
-                parse += atoi(args[REGISTER_NUM]) * SOURCE_REGISTER;
+                }
+                parse += atoi(&args[REGISTER_NUM]) * SOURCE_REGISTER;
                 reg = 1;
             }
-            else if (is_type(args, NUMBER)) //TODO check number of bits
+            else if (is_type(args, NUMBER)) 
             {
                 parse += atoi(args) * DEST_REGISTER;
             }
@@ -58,13 +62,13 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
             }
             else
             {
-                //error
+                add_front(&error_list,line_index,fname,"Unknown argument");
                 return 1;
             }
             /*************************** first argument ^^^^^^ *********************************************/
             args = strtok(NULL, " ,");
             if (!args)
-                //not enough arguments
+                add_front(&error_list,line_index,fname,"Not enough arguments");
                 return 1;
             if (!reg)
             {
@@ -74,22 +78,22 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
             IC++;
             if (is_type(args, REGISTER))
             {
-                if (strlen(args) < REGISTER_SIZE)
-                    //unkown register number
+                if (strlen(args) < REGISTER_SIZE){
+                    add_front(&error_list,line_index,fname,"Unknown register number");
                     return 1;
-                else if (args[REGISTER_NUM] > '9' || args[REGISTER_NUM] < '0')
-                    //register is only number based
+                }
+                else if (args[REGISTER_NUM] > '9' || args[REGISTER_NUM] < '0'){
+                    add_front(&error_list,line_index,fname,"Registers represented by numbers");
                     return 1;
-                else if (strlen(args) > REGISTER_SIZE)
-                    // to much shit after @r
+                }
+                else if (strlen(args) > REGISTER_SIZE){
+                    add_front(&error_list,line_index,fname,"Register name longer than accepted");
                     return 1;
-                parse += atoi(args[REGISTER_NUM]) * DEST_REGISTER;
+                }
+                parse += atoi(&args[REGISTER_NUM]) * DEST_REGISTER;
             }
-            else if (is_type(args, NUMBER)) //TODO check number of bits
-            {
-
+            else if (is_type(args, NUMBER)) 
                 parse += atoi(args) * DEST_REGISTER;
-            }
             else if (is_type(args, LABELN))
             {
                 parse += 2;
@@ -98,7 +102,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
             }
             else
             {
-                //error
+                add_front(&error_list,line_index,fname,"Unknown argument");
                 return 1;
             }
             /*************************** second argument ^^^^^^ *********************************************/
@@ -110,16 +114,19 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
         {
             if (is_type(args, REGISTER))
             {
-                if (strlen(args) < REGISTER_SIZE)
-                    //unkown register number
+                if (strlen(args) < REGISTER_SIZE){
+                    add_front(&error_list,line_index,fname,"Unknown register number");
                     return 1;
-                else if (args[REGISTER_NUM] > '9' || args[REGISTER_NUM] < '0')
-                    //register is only number based
+                }
+                else if (args[REGISTER_NUM] > '9' || args[REGISTER_NUM] < '0'){
+                    add_front(&error_list,line_index,fname,"Registers represented by numbers");
                     return 1;
-                else if (strlen(args) > REGISTER_SIZE)
-                    // to much shit after @r
+                }
+                else if (strlen(args) > REGISTER_SIZE){
+                    add_front(&error_list,line_index,fname,"Register name longer than accepted");
                     return 1;
-                parse += atoi(args[REGISTER_NUM]) * SOURCE_REGISTER;
+                }
+                parse += atoi(&args[REGISTER_NUM]) * SOURCE_REGISTER;
             }
             else if (is_type(args, NUMBER))
             {
@@ -134,7 +141,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
             }
             else
             {
-                //error
+                add_front(&error_list,line_index,fname,"Unknown argument");
                 return 1;
             }
         }
@@ -143,7 +150,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
         IC++;
         args = strtok(NULL, " ,");
         if (args)
-            //error אחשלי
+            add_front(&error_list,line_index,fname,"Extraneous text after end of command");
             return 1;
     }
     else
@@ -154,7 +161,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
     return 0;
 }
 
-int update_data(char *tok, char *line,int *data)
+int update_data(char *tok, char *line,int *data,unsigned int line_index,char *fname)
 {
     char *args = line;
     int parse = 0;
@@ -163,7 +170,7 @@ int update_data(char *tok, char *line,int *data)
         while (args)
         {
 
-            if (parse_data(args, NUM_DATA, &parse))
+            if (parse_data(args, NUM_DATA, &parse,line_index,fname))
                 return 1;
             data[DC]=parse;
             DC++;
@@ -177,7 +184,7 @@ int update_data(char *tok, char *line,int *data)
         int i;
         for (i = 1; i < strlen(line); i++)
         {
-            parse_data(args + i, CHAR_DATA, &parse);
+            parse_data(args + i, CHAR_DATA, &parse,line_index,fname);
             data[DC]=parse;
             DC++;
         }

@@ -12,9 +12,10 @@
 #define MAX_UINT    (2 ^ WORD_SIZE)
 
 
-int code[1024];
-int data[1024];
+unsigned int code[1024];
+unsigned int data[1024];
 int DC, IC;
+err_node_t *error_list=(err_node_t *)malloc(sizeof(err_node_t));
 
 typedef struct l {
     char * type;
@@ -25,10 +26,10 @@ typedef struct l {
 } label_t;
 
 int add_data_label(char * line, label_t* labels);
-int update_data(char * tok,char * line, int *data);
+int update_data(char * tok,char * line, unsigned int *data,unsigned int line_index,char *fname);
 int add_extern_label(char * line);
 int add_code_label(char * line);
-int update_code(int run,char * tok, char * line_s , unsigned int line_index, char *fname,int *code);
+int update_code(int run,char * tok, char * line_s , unsigned int line_index, char *fname,unsigned int *code);
 int update_entry(char * line);
 
 

@@ -11,11 +11,12 @@ extern int DC, IC;
 extern err_node_t *error_list;
 int main(int argc, char *argv[])
 {
+    FILE *file = NULL;
     char *name = NULL, *line_s = NULL, *tok = NULL, *label = NULL;
     unsigned int line_index = 0;
-    int i,error, j = 0, flag = 0;
+    int i,error, flag = 0;
     label_t *labels = NULL;
-    FILE *file = NULL;
+    error_list=(err_node_t *)malloc(sizeof(err_node_t));
 
     for (i = 0; argv[i]; i++)
     {

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "memory.h"
 #include "files.h"
+#include "error.h"
 
 #define OPCODE_NUM 16
 #define IS_ALPHABET(x) ((x >= 'a' && x <= 'z') || (x >= 'A' && x >= 'Z'))

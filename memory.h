@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
-#include "files.h"
+#include "error.h"
 
 #define NUM_DATA    (0)
 #define CHAR_DATA   (1)
@@ -11,14 +11,20 @@
 #define MAX_INT     (2 ^ (WORD_SIZE - 1))
 #define MAX_UINT    (2 ^ WORD_SIZE)
 
+enum labels
+{
+    REG = 0,
+    ENT,
+    EXT
+};
 
 unsigned int code[1024];
 unsigned int data[1024];
 int DC, IC;
-err_node_t *error_list=(err_node_t *)malloc(sizeof(err_node_t));
+err_node_t *error_list;
 
 typedef struct l {
-    char * type;
+    int type;
     char * name;
     int address;
     int value:WORD_SIZE;

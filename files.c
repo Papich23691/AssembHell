@@ -26,13 +26,13 @@ void create_error_file(err_node_t *head)
   }
 }
 
-void create_files(int code[1024], int data[1024], label_t *labels, char *name){
+void create_files(unsigned int code[1024], unsigned int data[1024], label_t *labels, char *name){
   FILE *fp;
+  char con[3];
   int i;
   char *fn=(char *)malloc(sizeof(name)+4);
   sprintf(fn,"%s.ob",name);
   fp = fopen(fn, "w+");
-  char con[3];
   fprintf(fp, "%d   %d",IC,DC);
   for (i=0;i<IC;i++){
     fprintf(fp,"%s\n",bin_to_64(code[i],con));

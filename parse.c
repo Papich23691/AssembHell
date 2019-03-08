@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 
+
 #define OPCODE_BITS 32
 #define FIRST_BITS 4
 #define SECOND_BITS 1024
@@ -15,7 +16,6 @@ int find_opcode(char *tok)
 {
     int i;
     for (i = 0; i < OPCODE_NUM && strcmp(tok, key_words[i]); i++);
-
     return i;
 }
 
@@ -100,7 +100,7 @@ int parse_code(char *tok, char *line, int *parse,unsigned int line_index,char *f
             return 1;
         }
 
-        //2 arguments
+        /*2 arguments*/
     }
     else if (i == NOT || i == CLR || (LEA < i && i < RTS))
     {
@@ -121,7 +121,7 @@ int parse_code(char *tok, char *line, int *parse,unsigned int line_index,char *f
             return 1;
         }
 
-        //1 argument
+        /*1 argument*/
     }
     return 0;
 }

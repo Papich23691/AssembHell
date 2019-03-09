@@ -2,7 +2,6 @@
 #define PARSE
 
 #include <stdio.h>
-#include "memory.h"
 #include "files.h"
 #include "error.h"
 
@@ -42,8 +41,6 @@ enum opcodes
     RTS,
     STOP
 };
-
-char *key_words[] = {"mov", "cmp", "add", "sub", "not", "clr", "lea", "inc", "dec", "jmp", "bne", "red", "prn", "jsr", "rts", "stop", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "data", "string", "entry", "extern"};
 
 int is_type(char *token, int type);
 int parse_code(char *tok, char *line,int * parse,unsigned int line_index,char *fname);

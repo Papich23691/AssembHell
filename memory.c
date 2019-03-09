@@ -7,25 +7,30 @@
 #define SOURCE_REGISTER 128
 #define DEST_REGISTER 4
 
-int update_code(int run, char *tok, char *line_s, unsigned int line_index, char *fname, unsigned int *code)
+int update_code(int run, char *tok, char *line_s, unsigned int line_index, char *fname, unsigned int *code, label_t *labels)
 {
     int parse = 0, i = 0, reg = 0;
     char *args = line_s;
+    label_t *curr = labels;
     if (!run)
     {
         if (parse_code(tok, line_s, &parse, line_index, fname)) /* error */
             return 1;
-
         code[IC] = parse;
         IC++;
         i = find_opcode(tok);
+
         if (i == OPCODE_NUM)
+        {
             add_front(&error_list, line_index, fname, "Unknown opcode");
-        return 1;
+            return 1;
+        }
         args = strtok(args, " ,");
         if (!args)
+        {
             add_front(&error_list, line_index, fname, "Not enough arguments");
-        return 1;
+            return 1;
+        }
         parse = 0;
         /*////////////////////////////////////////////////////////////////// opcode stuff ^^^^^^^^^^^^^^^^^^^^^ */
         if (i <= SUB || i == LEA)
@@ -100,6 +105,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 parse += atoi(args) * DEST_REGISTER;
             else if (is_type(args, LABELN))
             {
+
                 parse += 2;
                 /*add LABELN (if exists if not add space in memory)
                  parse+= 1 if extern*/
@@ -157,11 +163,77 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
         IC++;
         args = strtok(NULL, " ,");
         if (args)
+        {
             add_front(&error_list, line_index, fname, "Extraneous text after end of command");
-        return 1;
+            return 1;
+        }
     }
     else
     {
+        i = find_opcode(tok);
+        args = strtok(args, " ,");
+        ++IC;
+        if (i <= SUB || i == LEA)
+        {
+            if (is_type(args, LABELN))
+            {
+                while (curr->next)
+                {
+                    if (!strcmp(args, curr->name) && curr->type == EXTERNL)
+                        parse += 1;
+                    else if (!strcmp(args, curr->name))
+                    {
+                        parse += RELOCATION;
+                        parse += curr->address * DEST_REGISTER;
+                    }
+                }
+            }
+            code[IC] = parse;
+            ++IC;
+            parse = 0;
+            args = strtok(NULL, ", ");
+            curr = labels;
+            if (is_type(args, LABELN))
+            {
+                while (curr->next)
+                {
+                    if (!strcmp(args, curr->name) && curr->type == EXTERNL)
+                        parse += 1;
+                    else if (!strcmp(args, curr->name))
+                    {
+                        parse += RELOCATION;
+                        parse += curr->address * DEST_REGISTER;
+                    }
+                    else
+                    {
+                        add_front(&error_list, line_index, fname, "Unkown label");
+                        return 1;
+                    }
+                }
+            }
+            code[IC] = parse;
+            ++IC;
+            /*TODO second run*/
+        }
+        else if (i == NOT || i == CLR || (LEA < i && i < RTS))
+        {
+            if (is_type(args, LABELN))
+            {
+                while (curr->next)
+                {
+                    if (!strcmp(args, curr->name) && curr->type == EXTERNL)
+                        parse += 1;
+                    else if (!strcmp(args, curr->name))
+                    {
+                        parse += RELOCATION;
+                        parse += curr->address * DEST_REGISTER;
+                    }
+                }
+            }
+            code[IC] = parse;
+            ++IC;
+        }
+        return 0;
         /*TODO second run*/
     }
 
@@ -196,6 +268,79 @@ int update_data(char *tok, char *line, unsigned int *data, unsigned int line_ind
         }
         data[DC] = 0;
         DC++;
+    }
+    return 0;
+}
+
+void add_label(int type, char *name, int address, label_t *labels)
+{
+    label_t *current_node = labels;
+    label_t *new_node = (label_t *)malloc(sizeof(label_t));
+    new_node->type = type;
+    new_node->name = name;
+    new_node->address = address;
+    while (current_node->next)
+        ;
+    current_node->next = new_node;
+}
+
+int add_data_label(unsigned int line_index, char *fname, char *name, label_t *labels)
+{
+    if (!is_type(name, LABELN))
+    {
+        add_front(&error_list, line_index, fname, "Illegal label name");
+        return 1;
+    }
+    add_label(DATAL, name, DC, labels);
+    return 0;
+}
+
+int add_extern_label(unsigned int line_index, char *fname, char *name, label_t *labels)
+{
+    char *args = name;
+    args = strtok(name, ", ");
+    if (!is_type(args, LABELN))
+    {
+        add_front(&error_list, line_index, fname, "Illegal label name");
+        return 1;
+    }
+    add_label(EXTERNL, args, 0, labels);
+    return 0;
+}
+
+int add_code_label(unsigned int line_index, char *fname, char *name, label_t *labels)
+{
+    label_t *current_node = labels;
+    if (!is_type(name, LABELN))
+    {
+        add_front(&error_list, line_index, fname, "Illegal label name");
+        return 1;
+    }
+    while (current_node)
+    {
+        if (!strcmp(current_node->name, name))
+        {
+            add_front(&error_list, line_index, fname, "Illegal label name");
+            return 1;
+        }
+    }
+    add_label(CODEL, name, IC, labels);
+    return 0;
+}
+
+int update_entry(unsigned int line_index, char *fname, char *name, label_t *labels)
+{
+    label_t *current_node = labels;
+    while (current_node)
+    {
+        if (!strcmp(current_node->name, name))
+            current_node->type = ENTRYL;
+        current_node = current_node->next;
+    }
+    if (!current_node)
+    {
+        add_front(&error_list, line_index, fname, "Unkown label");
+        return 1;
     }
     return 0;
 }

@@ -1,8 +1,6 @@
 #include "parse.h"
-#include "memory.h"
 #include <string.h>
 #include <ctype.h>
-
 
 #define OPCODE_BITS 32
 #define FIRST_BITS 4
@@ -12,10 +10,13 @@
 #define IMMEDIATE 1
 #define MAX_VALUE 4096
 
+char *key_words[] = {"mov", "cmp", "add", "sub", "not", "clr", "lea", "inc", "dec", "jmp", "bne", "red", "prn", "jsr", "rts", "stop", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "data", "string", "entry", "extern"};
+
 int find_opcode(char *tok)
 {
     int i;
-    for (i = 0; i < OPCODE_NUM && strcmp(tok, key_words[i]); i++);
+    for (i = 0; i < OPCODE_NUM && strcmp(tok, key_words[i]); i++)
+        ;
     return i;
 }
 
@@ -58,13 +59,14 @@ int is_type(char *token, int type)
     return ret;
 }
 
-int parse_code(char *tok, char *line, int *parse,unsigned int line_index,char *fname)
+int parse_code(char *tok, char *line, int *parse, unsigned int line_index, char *fname)
 {
     char *args = line;
     int i = find_opcode(tok);
-    
-    if (i >= OPCODE_NUM){
-        add_front(&error_list,line_index,fname,"Unknown opcode");
+    if (i >= OPCODE_NUM)
+    {
+        printf("%d\n",1);
+        add_front(&error_list, line_index, fname, "Unknown opcode");
         return 1;
     }
     parse += OPCODE_BITS * i;
@@ -79,13 +81,15 @@ int parse_code(char *tok, char *line, int *parse,unsigned int line_index,char *f
             parse += DIRECT * SECOND_BITS;
         else
         {
-            add_front(&error_list,line_index,fname,"Unknown label");
+            printf("%s\n",args);
+            add_front(&error_list, line_index, fname, "Unknown label");
             return 1;
         }
         args = strtok(NULL, " ,");
         if (is_type(args, NUMBER) && i != CMP)
         {
-            add_front(&error_list,line_index,fname,"Can't pass number as an argument");
+            printf("%d\n",3);
+            add_front(&error_list, line_index, fname, "Can't pass number as an argument");
             return 1;
         }
         else if (is_type(args, NUMBER) && i == CMP)
@@ -96,17 +100,17 @@ int parse_code(char *tok, char *line, int *parse,unsigned int line_index,char *f
             parse += DIRECT * FIRST_BITS;
         else
         {
-            add_front(&error_list,line_index,fname,"Unknown label");
+            printf("%d\n",4);
+            add_front(&error_list, line_index, fname, "Unknown label");
             return 1;
         }
-
         /*2 arguments*/
     }
     else if (i == NOT || i == CLR || (LEA < i && i < RTS))
     {
         if (is_type(args, NUMBER) && i != PRN)
         {
-            add_front(&error_list,line_index,fname,"Can't pass number as an argument");
+            add_front(&error_list, line_index, fname, "Can't pass number as an argument");
             return 1;
         }
         else if (is_type(args, NUMBER) && i == PRN)
@@ -117,16 +121,15 @@ int parse_code(char *tok, char *line, int *parse,unsigned int line_index,char *f
             parse += DIRECT * FIRST_BITS;
         else
         {
-            add_front(&error_list,line_index,fname,"Unknown label");
+            add_front(&error_list, line_index, fname, "Unknown label");
             return 1;
         }
-
         /*1 argument*/
     }
     return 0;
 }
 
-int parse_data(char *tok, int data_type, int *parse,unsigned int line_index,char *fname)
+int parse_data(char *tok, int data_type, int *parse, unsigned int line_index, char *fname)
 {
     if (data_type)
     {
@@ -134,15 +137,14 @@ int parse_data(char *tok, int data_type, int *parse,unsigned int line_index,char
     }
     else
     {
-        if (is_type(tok, NUMBER) && atoi(tok) < MAX_VALUE) 
+        if (is_type(tok, NUMBER) && atoi(tok) < MAX_VALUE)
             *parse += atoi(tok);
         else
-            add_front(&error_list,line_index,fname,"Wrong data type");
-            return 1;
+            add_front(&error_list, line_index, fname, "Wrong data type");
+        return 1;
     }
     return 0;
 }
-
 
 bool is_valid_label(char *label)
 {

@@ -30,6 +30,8 @@ void create_files(unsigned int code[1024], unsigned int data[1024], label_t *lab
   FILE *fp;
   char con[3];
   int i;
+  printf("hello world\n");
+  label_t *curr=labels;
   char *fn=(char *)malloc(sizeof(name)+4);
   sprintf(fn,"%s.ob",name);
   fp = fopen(fn, "w+");
@@ -40,5 +42,24 @@ void create_files(unsigned int code[1024], unsigned int data[1024], label_t *lab
   for (i=0;i<DC;i++){
     fprintf(fp,"%s\n",bin_to_64(code[i],con));
   }
+  fclose(fp);
+  sprintf(fn,"%s.ent",name);
+  fp = fopen(fn, "w+");
+  while (curr)
+  {
+    if (curr->type==ENTRYL)
+        fprintf(fp,"%s\t%d",curr->name,curr->address);
+    curr=curr->next;
+  }
+  fclose(fp);
+  sprintf(fn,"%s.ext",name);
+  fp = fopen(fn, "w+");
+  while (curr)
+  {
+    if (curr->type==EXTERNL)
+        fprintf(fp,"%s\t%d",curr->name,curr->address);
+    curr=curr->next;
+  }
+  fclose(fp);
   /*add label shit*/
 }

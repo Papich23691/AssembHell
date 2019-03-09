@@ -4,3 +4,5 @@ OBJ = as
 
 all:
 	$(CC) $(SRC) -o $(OBJ) -g -pedantic -ansi -Wall
+fmt:
+	clang-format -i -style=file *.h *.c

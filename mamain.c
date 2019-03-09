@@ -20,20 +20,25 @@ int main(int argc, char *argv[]) {
   label_t *point = labels;
   error_list = (err_node_t *)malloc(sizeof(err_node_t));
   error_list->next = NULL;
-  for (i = 1; argv[i]; i++) {
+
+  for (i = 1; i < argc; ++i) {
     /* Initializtions */
     name = argv[i];
     error = 0;
     DC = 0;
     IC = 0;
     file = fopen(name, "r");
+    name = strtok(name, ".");
+
     if (file == NULL) {
       printf("Error opening file\n");
       return 1;
     }
+
     while (fgets(line_s, sizeof(line_s), file)) {
       ++line_index;
       if (line_s[0] != ';' && line_s[0] != '\n') {
+        printf("%d \t%s\n", line_index, line_s);
         cmd = strtok(line_s, " ");
         args = strtok(NULL, "\n");
         flag = 0;
@@ -45,13 +50,14 @@ int main(int argc, char *argv[]) {
           cmd = strtok(args, " ");
           args = strtok(NULL, "\n");
         }
+        printf("\t%s:%s\n", cmd, args);
         if (is_type(cmd, DATA)) {
           if (flag)
             error += add_data_label(line_index, name, label, labels);
           error += update_data(cmd, args, data, line_index, name);
           continue;
         } else if (is_type(cmd, EXTERN)) {
-          error += add_extern_label(line_index, name, args, labels);
+          error += add_extern_label(line_index, name, label, labels);
           continue;
         } else if (is_type(cmd, CODE)) {
           if (flag)
@@ -61,6 +67,7 @@ int main(int argc, char *argv[]) {
       }
     }
     fclose(file);
+
     if (error) {
       printf("number of errors   %d", error);
       return 1;
@@ -72,17 +79,11 @@ int main(int argc, char *argv[]) {
       point = point->next;
     }
     IC = 0;
-
     file = fopen(name, "r");
-    if (file == NULL) {
-      printf("Error opening file\n");
-      return 1;
-    }
     line_index = 0;
     while (fgets(line_s, sizeof(line_s), file)) {
       if (line_s[0] != ';' && line_s[0] != '\n') {
-        printf("%d \t%d\t%s\n", line_index, error, line_s);
-        cmd = strtok(line_s, " ");
+        char *cmd = strtok(line_s, " ");
         if (is_type(cmd, DATA) || is_type(cmd, EXTERN))
           continue;
         if (is_type(cmd, LABEL))
@@ -97,11 +98,9 @@ int main(int argc, char *argv[]) {
       ++line_index;
     }
     if (error) {
-      printf("fuck my life %d\n", error);
       return 1;
       create_error_file(error_list);
     }
-    name = strtok(name, ".");
     create_files(code, data, labels, argv[i]);
     free(labels);
   }

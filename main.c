@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
         while (fgets(line_s, sizeof(line_s), file))
         {
             ++line_index;
-            if (line_s[0] != ';' || line_s[0] != '\n')
+            if (line_s[0] != ';' && line_s[0] != '\n')
             {
                 printf("%d \t%s\n",line_index,line_s);
                 cmd = strtok(line_s, " ");
@@ -53,6 +53,7 @@ int main(int argc, char *argv[])
                     cmd = strtok(args," ");
                     args=strtok(NULL,"\n");
                 }
+                printf("\t%s:%s\n",cmd,args);
                 if (is_type(cmd, DATA))
                 {
                     if (flag)
@@ -77,7 +78,7 @@ int main(int argc, char *argv[])
 
         if (error)
         {
-            printf("yagell   %d",error);
+            printf("number of errors   %d",error);
             return 1;
             create_error_file(error_list);
         }

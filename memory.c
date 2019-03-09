@@ -25,10 +25,10 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
             return 1;
         }
         parse = 0;
+        args = strtok(args, " , ");
         /*////////////////////////////////////////////////////////////////// opcode stuff ^^^^^^^^^^^^^^^^^^^^^ */
         if (i <= SUB || i == LEA)
         {
-            args = strtok(args, " , ");
             if (!args)
             {
                 add_front(&error_list, line_index, fname, "Not enough arguments");
@@ -68,7 +68,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
             {
                 add_front(&error_list, line_index, fname, "Unknown argument");
                 return 1;
-            }
+            }   
             /*************************** first argument ^^^^^^ *********************************************/
             args = strtok(NULL, " , ");
             if (!args)
@@ -122,7 +122,6 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
         /*////////////////////////////////////////////////////////////////// 2 arguments ^^^^^^^ */
         else if (i == NOT || i == CLR || (LEA < i && i < RTS))
         {
-            args = strtok(args, " , ");
             if (!args)
             {
                 add_front(&error_list, line_index, fname, "Not enough arguments");
@@ -199,6 +198,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
             parse = 0;
             args = strtok(NULL, " , ");
             curr = labels;
+
             if (is_type(args, LABELN))
             {
                 while (curr->next)
@@ -242,7 +242,6 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
         return 0;
         /*TODO second run*/
     }
-            printf("%s:%s\n",tok,line_s);
     return 0;
 }
 

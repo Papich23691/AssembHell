@@ -96,7 +96,7 @@ int parse_code(char *tok, char *line, int *parse, unsigned int line_index, char 
         else if (is_type(args, LABELN))
             parse += DIRECT * FIRST_BITS;
         else
-        {            printf("%s:%s\n",tok,args);
+        {       
             add_front(&error_list, line_index, fname, "Unknown label");
             return 1;
         }
@@ -153,7 +153,6 @@ bool is_valid_label(char *label)
     for (i = 1; i < strlen(label); i++)
     {
         if (!IS_ALPHABET(label[i]) && !IS_NUMERIC(label[i])){
-            printf("%c\n",label[i]);
             return false;
         }
     }

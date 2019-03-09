@@ -15,7 +15,7 @@ void create_error_file(err_node_t *head)
 {
   FILE *fp;
   err_node_t *current_node = head;
-  fp = fopen("errors.txt", "w+");
+  fp = fopen("errors.txt", "w");
   if (fp)
   {
     while (current_node)

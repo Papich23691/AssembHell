@@ -65,12 +65,11 @@ int parse_code(char *tok, char *line, int *parse, unsigned int line_index, char 
     int i = find_opcode(tok);
     if (i >= OPCODE_NUM)
     {
-        printf("%d\n",1);
         add_front(&error_list, line_index, fname, "Unknown opcode");
         return 1;
     }
     parse += OPCODE_BITS * i;
-    args = strtok(args, " ,");
+    args = strtok(args, " , ");
     if (i <= SUB || i == LEA)
     {
         if (is_type(args, REGISTER) && i != LEA)
@@ -81,14 +80,12 @@ int parse_code(char *tok, char *line, int *parse, unsigned int line_index, char 
             parse += DIRECT * SECOND_BITS;
         else
         {
-            printf("%s\n",args);
             add_front(&error_list, line_index, fname, "Unknown label");
             return 1;
         }
-        args = strtok(NULL, " ,");
+        args = strtok(NULL, " , ");
         if (is_type(args, NUMBER) && i != CMP)
         {
-            printf("%d\n",3);
             add_front(&error_list, line_index, fname, "Can't pass number as an argument");
             return 1;
         }
@@ -99,8 +96,7 @@ int parse_code(char *tok, char *line, int *parse, unsigned int line_index, char 
         else if (is_type(args, LABELN))
             parse += DIRECT * FIRST_BITS;
         else
-        {
-            printf("%d\n",4);
+        {            printf("%s:%s\n",tok,args);
             add_front(&error_list, line_index, fname, "Unknown label");
             return 1;
         }
@@ -127,6 +123,7 @@ int parse_code(char *tok, char *line, int *parse, unsigned int line_index, char 
         /*1 argument*/
     }
     return 0;
+    
 }
 
 int parse_data(char *tok, int data_type, int *parse, unsigned int line_index, char *fname)
@@ -152,20 +149,19 @@ bool is_valid_label(char *label)
 
     if (!label || !IS_ALPHABET(label[0]))
         return false;
-
     /* Make sure the label is valid. */
-    for (i = 1; i < strlen(label); ++i)
+    for (i = 1; i < strlen(label); i++)
     {
-        if (!IS_ALPHABET(label[i]) || !IS_NUMERIC(label[i]))
+        if (!IS_ALPHABET(label[i]) && !IS_NUMERIC(label[i])){
+            printf("%c\n",label[i]);
             return false;
+        }
     }
-
     /* Check if the user used a keyword */
-    for (i = 0; i < CNT_KWORDS; ++i)
+    for (i = 0; i < CNT_KWORDS; i++)
     {
         if (!strcmp(label, key_words[i]))
             return false;
     }
-
     return true;
 }

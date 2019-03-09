@@ -13,11 +13,11 @@ extern err_node_t *error_list;
 int main(int argc, char *argv[])
 {
     FILE *file = NULL;
-    char *name = NULL, *tok = NULL, *label = NULL, *line_s=NULL;
+    char *name = NULL, *cmd = NULL, *label = NULL,*args = NULL;
+    char line_s[256];
     unsigned int line_index = 0;
     int i, error, flag = 0;
-    label_t *labels = (label_t *)malloc(sizeof(label_t));
-    labels->next=NULL;
+    label_t *labels =NULL;
     label_t *point = labels;
     error_list = (err_node_t *)malloc(sizeof(err_node_t));
     error_list->next=NULL;
@@ -28,7 +28,6 @@ int main(int argc, char *argv[])
         error = 0;
         DC = 0;
         IC = 0;
-        line_s=(char *)malloc(256);
         file = fopen(name, "r");
         name = strtok(name, ".");
         if (file == NULL)
@@ -41,37 +40,36 @@ int main(int argc, char *argv[])
             ++line_index;
             if (line_s[0] != ';' || line_s[0] != '\n')
             {
-                printf("%d\t%s\n",line_index,line_s);
-                tok = strtok(line_s, " ");
-                line_s=strtok(NULL,"");
+                printf("%d \t%s\n",line_index,line_s);
+                cmd = strtok(line_s, " ");
+                args=strtok(NULL,"\n");
                 flag = 0;
                 label = "";
-
-                if (is_type(tok, LABEL))
+                if (is_type(cmd, LABEL))
                 {
                     flag = 1;
-                    label = (char *)malloc(sizeof(tok));
-                    strncpy(label, tok, strlen(tok) - 1);
-                    tok = line_s;
-                    line_s=strtok(NULL,"");
+                    label = (char *)malloc(sizeof(cmd));
+                    strncpy(label, cmd, strlen(cmd) - 1);
+                    cmd = strtok(args," ");
+                    args=strtok(NULL,"\n");
                 }
-                if (is_type(tok, DATA))
+                if (is_type(cmd, DATA))
                 {
                     if (flag)
                         error += add_data_label(line_index, name, label, labels);
-                    error += update_data(tok, line_s, data, line_index, name);
+                    error += update_data(cmd, args, data, line_index, name);
                     continue;
                 }
-                else if (is_type(tok, EXTERN))
+                else if (is_type(cmd, EXTERN))
                 {
                     error += add_extern_label(line_index, name, label, labels);
                     continue;
                 }
-                else if (is_type(tok, CODE))
+                else if (is_type(cmd, CODE))
                 {
                     if (flag)
                         error += add_code_label(line_index, name, label, labels);
-                    error += update_code(0, tok, line_s, line_index, name, code, labels);
+                    error += update_code(0, cmd, args, line_index, name, code, labels);
                 }
             }
         }
@@ -79,6 +77,7 @@ int main(int argc, char *argv[])
 
         if (error)
         {
+            printf("yagell   %d",error);
             return 1;
             create_error_file(error_list);
         }
@@ -95,18 +94,18 @@ int main(int argc, char *argv[])
         {
             if (line_s[0] != ';' && line_s[0] != '\n')
             {
-                char *tok = strtok(line_s, " ");
-                if (is_type(tok, DATA) || is_type(tok, EXTERN))
+                char *cmd = strtok(line_s, " ");
+                if (is_type(cmd, DATA) || is_type(cmd, EXTERN))
                     continue;
-                if (is_type(tok, LABEL))
-                    tok = strtok(NULL, " ");
-                if (is_type(tok, ENTRY))
+                if (is_type(cmd, LABEL))
+                    cmd = strtok(NULL, " ");
+                if (is_type(cmd, ENTRY))
                 {
                     error += update_entry(line_index, name, line_s, labels);
                     continue;
                 }
-                if (is_type(tok, CODE))
-                    error += update_code(1, tok, line_s, line_index, name, code, labels);
+                if (is_type(cmd, CODE))
+                    error += update_code(1, cmd, line_s, line_index, name, code, labels);
             }
             ++line_index;
         }

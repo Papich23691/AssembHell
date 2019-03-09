@@ -6,9 +6,9 @@
 #include "error.h"
 
 #define OPCODE_NUM 16
-#define IS_ALPHABET(x) ((x >= 'a' && x <= 'z') || (x >= 'A' && x >= 'Z'))
+#define IS_ALPHABET(x) ((x >= 'a' && x <= 'z') || (x >= 'A' && x <= 'Z'))
 #define IS_NUMERIC(x) ((x >= '0' && x <= '9'))
-#define CNT_KWORDS (28)
+#define CNT_KWORDS (27)
 
 enum types
 {

@@ -17,25 +17,23 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
         if (parse_code(tok, line_s, &parse, line_index, fname)) /* error */
             return 1;
         code[IC] = parse;
-        IC++;
+        ++IC;
         i = find_opcode(tok);
-
         if (i == OPCODE_NUM)
         {
             add_front(&error_list, line_index, fname, "Unknown opcode");
-            return 1;
-        }
-        args = strtok(args, " ,");
-        if (!args)
-        {
-            add_front(&error_list, line_index, fname, "Not enough arguments");
             return 1;
         }
         parse = 0;
         /*////////////////////////////////////////////////////////////////// opcode stuff ^^^^^^^^^^^^^^^^^^^^^ */
         if (i <= SUB || i == LEA)
         {
-            IC++;
+            args = strtok(args, " , ");
+            if (!args)
+            {
+                add_front(&error_list, line_index, fname, "Not enough arguments");
+                return 1;
+            }
             if (is_type(args, REGISTER))
             {
                 if (strlen(args) < REGISTER_SIZE)
@@ -72,16 +70,18 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 return 1;
             }
             /*************************** first argument ^^^^^^ *********************************************/
-            args = strtok(NULL, " ,");
+            args = strtok(NULL, " , ");
             if (!args)
+            {
                 add_front(&error_list, line_index, fname, "Not enough arguments");
-            return 1;
+                return 1;
+            }
             if (!reg)
             {
                 code[IC] = parse;
                 parse = 0;
             }
-            IC++;
+            ++IC;
             if (is_type(args, REGISTER))
             {
                 if (strlen(args) < REGISTER_SIZE)
@@ -117,11 +117,17 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
             }
             /*************************** second argument ^^^^^^ *********************************************/
             code[IC] = parse;
-            IC++;
+            ++IC;
         }
         /*////////////////////////////////////////////////////////////////// 2 arguments ^^^^^^^ */
         else if (i == NOT || i == CLR || (LEA < i && i < RTS))
         {
+            args = strtok(args, " , ");
+            if (!args)
+            {
+                add_front(&error_list, line_index, fname, "Not enough arguments");
+                return 1;
+            }
             if (is_type(args, REGISTER))
             {
                 if (strlen(args) < REGISTER_SIZE)
@@ -157,11 +163,11 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 add_front(&error_list, line_index, fname, "Unknown argument");
                 return 1;
             }
+            code[IC] = parse;
+            ++IC;
         }
         /*////////////////////////////////////////////////////////////////// 1 argument ^^^^^^^^ */
-        code[IC] = parse;
-        IC++;
-        args = strtok(NULL, " ,");
+        args = strtok(NULL, " , ");
         if (args)
         {
             add_front(&error_list, line_index, fname, "Extraneous text after end of command");
@@ -171,7 +177,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
     else
     {
         i = find_opcode(tok);
-        args = strtok(args, " ,");
+        args = strtok(args, " , ");
         ++IC;
         if (i <= SUB || i == LEA)
         {
@@ -191,7 +197,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
             code[IC] = parse;
             ++IC;
             parse = 0;
-            args = strtok(NULL, ", ");
+            args = strtok(NULL, " , ");
             curr = labels;
             if (is_type(args, LABELN))
             {
@@ -236,7 +242,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
         return 0;
         /*TODO second run*/
     }
-
+            printf("%s:%s\n",tok,line_s);
     return 0;
 }
 
@@ -253,7 +259,7 @@ int update_data(char *tok, char *line, unsigned int *data, unsigned int line_ind
                 return 1;
             data[DC] = parse;
             DC++;
-            args = strtok(NULL, " ,");
+            args = strtok(NULL, " , ");
         }
     }
     else
@@ -279,9 +285,10 @@ void add_label(int type, char *name, int address, label_t *labels)
     new_node->type = type;
     new_node->name = name;
     new_node->address = address;
-    while (current_node->next)
+    new_node->next = NULL;
+    while (current_node)
         ;
-    current_node->next = new_node;
+    current_node = new_node;
 }
 
 int add_data_label(unsigned int line_index, char *fname, char *name, label_t *labels)
@@ -298,7 +305,7 @@ int add_data_label(unsigned int line_index, char *fname, char *name, label_t *la
 int add_extern_label(unsigned int line_index, char *fname, char *name, label_t *labels)
 {
     char *args = name;
-    args = strtok(name, ", ");
+    args = strtok(name, " , ");
     if (!is_type(args, LABELN))
     {
         add_front(&error_list, line_index, fname, "Illegal label name");
@@ -323,6 +330,7 @@ int add_code_label(unsigned int line_index, char *fname, char *name, label_t *la
             add_front(&error_list, line_index, fname, "Illegal label name");
             return 1;
         }
+        current_node = current_node->next;
     }
     add_label(CODEL, name, IC, labels);
     return 0;

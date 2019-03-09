@@ -61,7 +61,9 @@ int is_type(char *token, int type)
 
 int parse_code(char *tok, char *line, int *parse, unsigned int line_index, char *fname)
 {
-    char *args = line;
+    char *args = (char *)malloc(sizeof(line));
+    if (line)
+        strncpy(args, line, strlen(line));
     int i = find_opcode(tok);
     if (i >= OPCODE_NUM)
     {
@@ -96,7 +98,7 @@ int parse_code(char *tok, char *line, int *parse, unsigned int line_index, char 
         else if (is_type(args, LABELN))
             parse += DIRECT * FIRST_BITS;
         else
-        {       
+        {
             add_front(&error_list, line_index, fname, "Unknown label");
             return 1;
         }
@@ -123,7 +125,6 @@ int parse_code(char *tok, char *line, int *parse, unsigned int line_index, char 
         /*1 argument*/
     }
     return 0;
-    
 }
 
 int parse_data(char *tok, int data_type, int *parse, unsigned int line_index, char *fname)
@@ -137,8 +138,10 @@ int parse_data(char *tok, int data_type, int *parse, unsigned int line_index, ch
         if (is_type(tok, NUMBER) && atoi(tok) < MAX_VALUE)
             *parse += atoi(tok);
         else
+        {
             add_front(&error_list, line_index, fname, "Wrong data type");
-        return 1;
+            return 1;
+        }
     }
     return 0;
 }
@@ -152,7 +155,8 @@ bool is_valid_label(char *label)
     /* Make sure the label is valid. */
     for (i = 1; i < strlen(label); i++)
     {
-        if (!IS_ALPHABET(label[i]) && !IS_NUMERIC(label[i])){
+        if (!IS_ALPHABET(label[i]) && !IS_NUMERIC(label[i]))
+        {
             return false;
         }
     }

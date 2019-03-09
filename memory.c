@@ -68,7 +68,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
             {
                 add_front(&error_list, line_index, fname, "Unknown argument");
                 return 1;
-            }   
+            }
             /*************************** first argument ^^^^^^ *********************************************/
             args = strtok(NULL, " , ");
             if (!args)
@@ -249,11 +249,11 @@ int update_data(char *tok, char *line, unsigned int *data, unsigned int line_ind
 {
     char *args = line;
     int parse = 0, i;
-    if (strcmp(tok, ".data"))
+    if (!strcmp(tok, ".data"))
     {
+        args = strtok(line, " , ");
         while (args)
         {
-
             if (parse_data(args, NUM_DATA, &parse, line_index, fname))
                 return 1;
             data[DC] = parse;
@@ -264,7 +264,9 @@ int update_data(char *tok, char *line, unsigned int *data, unsigned int line_ind
     else
     {
         if (line[0] != '"' || line[strlen(line) - 1] != '"')
+        {
             return 1;
+        }
         for (i = 1; i < strlen(line); i++)
         {
             parse_data(args + i, CHAR_DATA, &parse, line_index, fname);
@@ -279,6 +281,7 @@ int update_data(char *tok, char *line, unsigned int *data, unsigned int line_ind
 
 void add_label(int type, char *name, int address, label_t *labels)
 {
+                printf("%s\n",name);
     label_t *current_node = labels;
     label_t *new_node = (label_t *)malloc(sizeof(label_t));
     new_node->type = type;
@@ -286,7 +289,9 @@ void add_label(int type, char *name, int address, label_t *labels)
     new_node->address = address;
     new_node->next = NULL;
     while (current_node)
-        ;
+    {
+        current_node = current_node->next;
+    }
     current_node = new_node;
 }
 
@@ -304,7 +309,6 @@ int add_data_label(unsigned int line_index, char *fname, char *name, label_t *la
 int add_extern_label(unsigned int line_index, char *fname, char *name, label_t *labels)
 {
     char *args = name;
-    args = strtok(name, " , ");
     if (!is_type(args, LABELN))
     {
         add_front(&error_list, line_index, fname, "Illegal label name");
@@ -341,7 +345,11 @@ int update_entry(unsigned int line_index, char *fname, char *name, label_t *labe
     while (current_node)
     {
         if (!strcmp(current_node->name, name))
+        {
+            printf("%s\n", current_node->name);
             current_node->type = ENTRYL;
+            break;
+        }
         current_node = current_node->next;
     }
     if (!current_node)

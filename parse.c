@@ -4,7 +4,7 @@
 
 #define OPCODE_BITS 32
 #define FIRST_BITS 4
-#define SECOND_BITS 1024
+#define SECOND_BITS 512
 #define DIRECT_REG 5
 #define DIRECT 3
 #define IMMEDIATE 1
@@ -59,27 +59,27 @@ int is_type(char *token, int type)
     return ret;
 }
 
-int parse_code(char *tok, char *line, int *parse, unsigned int line_index, char *fname)
+int parse_code(char *tok, char *line, unsigned int *parse, unsigned int line_index, char *fname)
 {
     char *args = (char *)malloc(sizeof(line));
+    int i = find_opcode(tok);
     if (line)
         strncpy(args, line, strlen(line));
-    int i = find_opcode(tok);
     if (i >= OPCODE_NUM)
     {
         add_front(&error_list, line_index, fname, "Unknown opcode");
         return 1;
     }
-    parse += OPCODE_BITS * i;
+    *parse = OPCODE_BITS * i;
     args = strtok(args, " , ");
     if (i <= SUB || i == LEA)
     {
         if (is_type(args, REGISTER) && i != LEA)
-            parse += DIRECT_REG * SECOND_BITS;
+            *parse += DIRECT_REG * SECOND_BITS;
         else if (is_type(args, NUMBER) && i != LEA)
-            parse += IMMEDIATE * SECOND_BITS;
+            *parse += IMMEDIATE * SECOND_BITS;
         else if (is_type(args, LABELN))
-            parse += DIRECT * SECOND_BITS;
+            *parse += DIRECT * SECOND_BITS;
         else
         {
             add_front(&error_list, line_index, fname, "Unknown label");
@@ -92,11 +92,11 @@ int parse_code(char *tok, char *line, int *parse, unsigned int line_index, char 
             return 1;
         }
         else if (is_type(args, NUMBER) && i == CMP)
-            parse += IMMEDIATE * FIRST_BITS;
+            *parse += IMMEDIATE * FIRST_BITS;
         else if (is_type(args, REGISTER))
-            parse += DIRECT_REG * FIRST_BITS;
+            *parse += DIRECT_REG * FIRST_BITS;
         else if (is_type(args, LABELN))
-            parse += DIRECT * FIRST_BITS;
+            *parse += DIRECT * FIRST_BITS;
         else
         {
             add_front(&error_list, line_index, fname, "Unknown label");
@@ -112,11 +112,11 @@ int parse_code(char *tok, char *line, int *parse, unsigned int line_index, char 
             return 1;
         }
         else if (is_type(args, NUMBER) && i == PRN)
-            parse += IMMEDIATE * FIRST_BITS;
+            *parse += IMMEDIATE * FIRST_BITS;
         else if (is_type(args, REGISTER))
-            parse += DIRECT_REG * FIRST_BITS;
+            *parse += DIRECT_REG * FIRST_BITS;
         else if (is_type(args, LABELN))
-            parse += DIRECT * FIRST_BITS;
+            *parse += DIRECT * FIRST_BITS;
         else
         {
             add_front(&error_list, line_index, fname, "Unknown label");
@@ -131,12 +131,14 @@ int parse_data(char *tok, int data_type, int *parse, unsigned int line_index, ch
 {
     if (data_type)
     {
-        parse += (int)*tok;
+        *parse = (int)*tok;
     }
     else
     {
         if (is_type(tok, NUMBER) && atoi(tok) < MAX_VALUE)
-            *parse += atoi(tok);
+        {
+            *parse = atoi(tok);
+        }
         else
         {
             add_front(&error_list, line_index, fname, "Wrong data type");

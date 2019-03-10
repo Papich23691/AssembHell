@@ -43,7 +43,7 @@ enum opcodes
 };
 
 int is_type(char *token, int type);
-int parse_code(char *tok, char *line,int * parse,unsigned int line_index,char *fname);
+int parse_code(char *tok, char *line,unsigned int * parse,unsigned int line_index,char *fname);
 int find_opcode(char *tok);
 int parse_data(char *tok, int data_type, int *parse,unsigned int line_index,char *fname);
 bool is_valid_label(char *label);

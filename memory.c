@@ -9,7 +9,7 @@
 
 int update_code(int run, char *tok, char *line_s, unsigned int line_index, char *fname, unsigned int *code, label_t **labels)
 {
-    int parse = 0, i = 0, reg = 0;
+    unsigned int parse = 0, i = 0, reg = 0;
     char *args = line_s;
     label_t **curr = labels;
     if (!run)
@@ -58,13 +58,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
             {
                 parse += atoi(args) * DEST_REGISTER;
             }
-            else if (is_type(args, LABELN))
-            {
-                parse += 2;
-                /*add LABELN (if exists if not add space in memory)
-                 parse+= 1 if extern*/
-            }
-            else
+            else if (!is_type(args, LABELN))
             {
                 add_front(&error_list, line_index, fname, "Unknown argument");
                 return 1;
@@ -80,8 +74,8 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
             {
                 code[IC] = parse;
                 parse = 0;
+                ++IC;
             }
-            ++IC;
             if (is_type(args, REGISTER))
             {
                 if (strlen(args) < REGISTER_SIZE)
@@ -102,13 +96,23 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 parse += atoi(&args[REGISTER_NUM]) * DEST_REGISTER;
             }
             else if (is_type(args, NUMBER))
+            {
+                if (reg)
+                {
+                    code[IC] = parse;
+                    ++IC;
+                }
+                parse = 0;
                 parse += atoi(args) * DEST_REGISTER;
+            }
             else if (is_type(args, LABELN))
             {
-
-                parse += 2;
-                /*add LABELN (if exists if not add space in memory)
-                 parse+= 1 if extern*/
+                if (reg)
+                {
+                    code[IC] = parse;
+                    ++IC;
+                }
+                parse = 0;
             }
             else
             {
@@ -150,14 +154,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
             {
                 parse += atoi(args) * SOURCE_REGISTER;
             }
-            else if (is_type(args, LABELN))
-            {
-
-                parse += 2;
-                /*add LABELN (if exists if not add space in memory)
-                 parse+= 1 if extern*/
-            }
-            else
+            else if (!is_type(args, LABELN))
             {
                 add_front(&error_list, line_index, fname, "Unknown argument");
                 return 1;
@@ -175,7 +172,6 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
     }
     else
     {
-
         i = find_opcode(tok);
         args = strtok(args, " , ");
         ++IC;
@@ -200,17 +196,16 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 }
                 if (!*curr)
                 {
-                    printf(" hi there line number %d\n", line_index);
                     add_front(&error_list, line_index, fname, "Unkown label");
                     return 1;
                 }
+                code[IC] = parse;
             }
-            code[IC] = parse;
-            ++IC;
+            if (!is_type(args, REGISTER))
+                ++IC;
             parse = 0;
             args = strtok(NULL, " , ");
             curr = labels;
-
             if (is_type(args, LABELN))
             {
                 while (*curr)
@@ -230,12 +225,14 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 }
                 if (!*curr)
                 {
-                    printf(" hi there line number %d\n", line_index);
                     add_front(&error_list, line_index, fname, "Unkown label");
                     return 1;
                 }
+                ++IC;
+                code[IC] = parse;
             }
-            code[IC] = parse;
+            else if (!is_type(args, REGISTER))
+                ++IC;
             ++IC;
             /*TODO second run*/
         }
@@ -260,12 +257,11 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 }
                 if (!*curr)
                 {
-                    printf(" hi there line number %d\n", line_index);
                     add_front(&error_list, line_index, fname, "Unkown label");
                     return 1;
                 }
+                code[IC] = parse;
             }
-            code[IC] = parse;
             ++IC;
         }
         return 0;
@@ -277,7 +273,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
 int update_data(char *tok, char *line, unsigned int *data, unsigned int line_index, char *fname)
 {
     char *args = line;
-    int parse = 0, i;
+    unsigned int parse = 0, i;
     if (!strcmp(tok, ".data"))
     {
         args = strtok(line, " , ");
@@ -296,7 +292,7 @@ int update_data(char *tok, char *line, unsigned int *data, unsigned int line_ind
         {
             return 1;
         }
-        for (i = 1; i < strlen(line); i++)
+        for (i = 1; i < strlen(line) - 1; i++)
         {
             parse_data(args + i, CHAR_DATA, &parse, line_index, fname);
             data[DC] = parse;
@@ -339,8 +335,8 @@ int add_data_label(unsigned int line_index, char *fname, char *name, label_t **l
 
 int add_extern_label(unsigned int line_index, char *fname, char *name, label_t **labels)
 {
-    char *label=(char *)malloc(sizeof(name));
-    strncpy(label,name,strlen(name));
+    char *label = (char *)malloc(sizeof(name));
+    strncpy(label, name, strlen(name));
     if (!is_type(label, LABELN))
     {
         add_front(&error_list, line_index, fname, "Illegal label name");
@@ -374,6 +370,7 @@ int add_code_label(unsigned int line_index, char *fname, char *name, label_t **l
 int update_entry(unsigned int line_index, char *fname, char *name, label_t **labels)
 {
     label_t **current_node = labels;
+    name=strtok(name," ");
     while (*current_node)
     {
         if (!strcmp((*current_node)->name, name))

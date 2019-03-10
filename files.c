@@ -26,40 +26,42 @@ void create_error_file(err_node_t *head)
   }
 }
 
-void create_files(unsigned int code[1024], unsigned int data[1024], label_t *labels, char *name){
+void create_files(unsigned int code[1024], unsigned int data[1024], label_t *labels, char *name)
+{
   FILE *fp;
   char con[3];
   int i;
-  printf("hello world\n");
-  label_t *curr=labels;
-  char *fn=(char *)malloc(sizeof(name)+4);
-  sprintf(fn,"%s.ob",name);
+  label_t *curr = labels;
+  char *fn = (char *)malloc(sizeof(name) + 4);
+  sprintf(fn, "%s.ob", name);
   fp = fopen(fn, "w+");
-  fprintf(fp, "%d   %d",IC,DC);
-  for (i=0;i<IC;i++){
-    fprintf(fp,"%s\n",bin_to_64(code[i],con));
+  fprintf(fp, "%d %d\n", IC, DC);
+  for (i = 0; i < IC; i++)
+  {
+    fprintf(fp, "%s\n", bin_to_64(code[i], con));
   }
-  for (i=0;i<DC;i++){
-    fprintf(fp,"%s\n",bin_to_64(code[i],con));
+  for (i = 0; i < DC; i++)
+  {
+    fprintf(fp, "%s\n", bin_to_64(data[i], con));
   }
   fclose(fp);
-  sprintf(fn,"%s.ent",name);
+  sprintf(fn, "%s.ent", name);
   fp = fopen(fn, "w+");
   while (curr)
   {
-    if (curr->type==ENTRYL)
-        fprintf(fp,"%s\t%d",curr->name,curr->address);
-    curr=curr->next;
+    if (curr->type == ENTRYL)
+      fprintf(fp, "%s\t%d\n", curr->name, curr->address);
+    curr = curr->next;
   }
   fclose(fp);
-  sprintf(fn,"%s.ext",name);
+  sprintf(fn, "%s.ext", name);
   fp = fopen(fn, "w+");
+  curr = labels;
   while (curr)
   {
-    if (curr->type==EXTERNL)
-        fprintf(fp,"%s\t%d",curr->name,curr->address);
-    curr=curr->next;
+    if (curr->type == EXTERNL)
+      fprintf(fp, "%s\t%d\n", curr->name, curr->address);
+    curr = curr->next;
   }
   fclose(fp);
-  /*add label shit*/
 }

@@ -18,10 +18,11 @@ int main(int argc, char *argv[])
     unsigned int line_index = 0;
     int i, error, flag = 0;
     label_t *labels = (label_t *)malloc(sizeof(label_t));
+    label_t **point;
     error_list = (err_node_t *)malloc(sizeof(err_node_t));
     error_list->next = NULL;
     labels = NULL;
-    label_t **point = &labels;
+    point = &labels;
     for (i = 1; argv[i]; i++)
     {
         /* Initializtions */
@@ -78,6 +79,7 @@ int main(int argc, char *argv[])
             return 1;
             create_error_file(error_list);
         }
+        printf("\n");
         while (*point)
         {
             if ((*point)->type == DATAL)
@@ -94,9 +96,9 @@ int main(int argc, char *argv[])
         line_index = 0;
         while (fgets(line_s, sizeof(line_s), file))
         {
+            ++line_index;
             if (line_s[0] != ';' && line_s[0] != '\n')
             {
-                printf("%d\t%s\n",line_index,line_s);
                 cmd = strtok(line_s, " ");
                 args = strtok(NULL, "\n");
                 if (is_type(cmd, DATA) || is_type(cmd, EXTERN))
@@ -116,7 +118,6 @@ int main(int argc, char *argv[])
                     error += update_code(1, cmd, args, line_index, name, code, &labels);
                 }
             }
-            ++line_index;
         }
         if (error)
         {

@@ -15,6 +15,6 @@ typedef struct ERROR_NODE {
 
 void add_front(err_node_t **head, unsigned int line, char *fname, char *desc);
 void display_list(err_node_t *head);
-void delete_list(err_node_t **head);
+void delete_errors_list(err_node_t **head);
 
 #endif /* __H_ERROR */

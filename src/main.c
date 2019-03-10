@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
         
         while (fgets(line_s, sizeof(line_s), file))
         {
+            printf("%d:%d\t%s\n",line_index,error,line_s);
             ++line_index;
             if (line_s[0] != ';' && line_s[0] != '\n')
             {
@@ -47,6 +48,7 @@ int main(int argc, char *argv[])
                 if (is_type(cmd, LABEL))
                 {
                     flag = 1;
+                    cmd[strlen(cmd) - 1] = '\0';
                     label = duplicate_string(cmd);
                     cmd = strtok(args, " ");
                     args = strtok(NULL, "\n");
@@ -76,9 +78,8 @@ int main(int argc, char *argv[])
         
         if (error)
         {
-            printf("error\n");
-            return 1;
             create_error_file(error_list);
+            continue;
         }
         
         while (*point)
@@ -127,8 +128,8 @@ int main(int argc, char *argv[])
         if (error)
         {
             printf("error\n");
-            return 1;
             create_error_file(error_list);
+            continue;
         }
 
         name = strtok(name, ".");
@@ -136,7 +137,7 @@ int main(int argc, char *argv[])
         free(labels);
     }
 
-    delete_errors_list(error_list);
+    delete_errors_list(&error_list);
     
 
     return 0;

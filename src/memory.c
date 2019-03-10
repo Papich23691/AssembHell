@@ -354,6 +354,7 @@ void add_label(int type, char *name, int address, label_t **labels)
 int add_data_label(unsigned int line_index, char *fname, char *name, label_t **labels)
 {
     label_t **current_node = labels;
+
     while (*current_node)
     {
         if (!strcmp((*current_node)->name, name))
@@ -365,6 +366,8 @@ int add_data_label(unsigned int line_index, char *fname, char *name, label_t **l
     }
     if (!is_type(name, LABELN))
     {
+        printf("%s\n", name);
+
         add_front(&error_list, line_index, fname, "Illegal label name");
         return 1;
     }
@@ -444,16 +447,4 @@ int update_entry(unsigned int line_index, char *fname, char *name, label_t **lab
     return 0;
 }
 
-void delete_errors_list(err_node_t **root) {
-  err_node_t *curr = *root, *tmp = NULL;
 
-  while (curr != NULL) {
-    tmp = curr;
-    curr = curr->next;
-    free(tmp->desc);
-    free(tmp->fname);
-    free(tmp);
-  }
-
-    *root = NULL;
-}

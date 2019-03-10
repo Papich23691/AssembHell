@@ -9,8 +9,9 @@
 
 int update_code(int run, char *tok, char *line_s, unsigned int line_index, char *fname, unsigned int *code, label_t **labels)
 {
+
     unsigned int parse = 0, i = 0, reg = 0;
-    char *args = line_s;
+    char *label, *args = line_s;
     label_t **curr = labels;
     if (!run)
     {
@@ -183,6 +184,9 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 {
                     if (!strcmp(args, (*curr)->name) && (*curr)->type == EXTERNL)
                     {
+                        label = (char *)malloc(sizeof(args));
+                        strncpy(label, args, strlen(args));
+                        add_label(EXTERNL, label, IC + 100, &ext);
                         parse += 1;
                         break;
                     }
@@ -212,6 +216,9 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 {
                     if (!strcmp(args, (*curr)->name) && (*curr)->type == EXTERNL)
                     {
+                        label = (char *)malloc(sizeof(args));
+                        strncpy(label, args, strlen(args));
+                        add_label(EXTERNL, label, IC + 100, &ext);
                         parse += 1;
                         break;
                     }
@@ -244,6 +251,9 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 {
                     if (!strcmp(args, (*curr)->name) && (*curr)->type == EXTERNL)
                     {
+                        label = (char *)malloc(sizeof(args));
+                        strncpy(label, args, strlen(args));
+                        add_label(EXTERNL, label, IC + 100, &ext);
                         parse += 1;
                         break;
                     }
@@ -370,7 +380,7 @@ int add_code_label(unsigned int line_index, char *fname, char *name, label_t **l
 int update_entry(unsigned int line_index, char *fname, char *name, label_t **labels)
 {
     label_t **current_node = labels;
-    name=strtok(name," ");
+    name = strtok(name, " ");
     while (*current_node)
     {
         if (!strcmp((*current_node)->name, name))

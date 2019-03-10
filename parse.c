@@ -127,7 +127,7 @@ int parse_code(char *tok, char *line, unsigned int *parse, unsigned int line_ind
     return 0;
 }
 
-int parse_data(char *tok, int data_type, int *parse, unsigned int line_index, char *fname)
+int parse_data(char *tok, int data_type, unsigned int *parse, unsigned int line_index, char *fname)
 {
     if (data_type)
     {

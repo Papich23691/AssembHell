@@ -333,22 +333,31 @@ int update_data(char *tok, char *line, unsigned int *data, unsigned int line_ind
 
 void add_label(int type, char *name, int address, label_t **labels)
 {
-    label_t **current_node = labels;
-    label_t *new_node = (label_t *)malloc(sizeof(label_t));
-    
-    while (*current_node && (*current_node)->next)
-    {
-        current_node = &(*current_node)->next;
-    }
-    
+    label_t *new_node = (label_t*)malloc(sizeof(label_t));
+
     new_node->type = type;
     new_node->name = duplicate_string(name);
     new_node->address = address;
     new_node->next = NULL;
-    if (*current_node)
-        (*current_node)->next = new_node;
-    else
+
+    if (*labels == NULL) {
         *labels = new_node;
+    }
+    else if ((*labels)->next == NULL) {
+        (*labels)->next = new_node;
+    }
+    else
+    {
+        label_t *current = *labels;
+        while (true) {
+            if(current->next == NULL)
+            {
+                current->next = new_node;
+                return;
+            }
+            current = current->next;
+        };
+    }
 }
 
 int add_data_label(unsigned int line_index, char *fname, char *name, label_t **labels)
@@ -447,4 +456,15 @@ int update_entry(unsigned int line_index, char *fname, char *name, label_t **lab
     return 0;
 }
 
+void delete_labels_list(label_t **root) {
+  label_t *curr = *root, *tmp = NULL;
 
+  while (curr != NULL) {
+    tmp = curr;
+    curr = curr->next;
+    free(tmp->name);
+    free(tmp);
+  }
+
+    *root = NULL;
+}

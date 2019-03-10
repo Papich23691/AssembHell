@@ -29,7 +29,7 @@ void create_error_file(err_node_t *head)
 void create_files(unsigned int code[1024], unsigned int data[1024], label_t *labels, char *name)
 {
   FILE *fp;
-  char con[3];
+  char con[3] = { 0 };
   int flag=0;
   int i;
   label_t *curr = labels;

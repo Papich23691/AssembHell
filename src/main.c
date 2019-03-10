@@ -19,6 +19,7 @@ int main(int argc, char *argv[])
     label_t *labels = NULL;
     label_t **point = &labels;
     error_list = NULL;
+    ext = NULL;
 
     for (i = 1; i < argc; ++i)
     {
@@ -134,11 +135,12 @@ int main(int argc, char *argv[])
 
         name = strtok(name, ".");
         create_files(code, data, labels, argv[i]);
-        free(labels);
+        fclose(file);
     }
 
     delete_errors_list(&error_list);
-    
+    delete_labels_list(&ext);
+    delete_labels_list(&labels);
 
     return 0;
 }

@@ -16,10 +16,9 @@ int main(int argc, char *argv[])
     char line_s[256];
     unsigned int line_index = 0;
     int i, error, flag = 0;
-    label_t *labels = (label_t *)malloc(sizeof(label_t));
+    label_t *labels;
     label_t **point;
-    error_list = (err_node_t *)malloc(sizeof(err_node_t));
-    error_list->next = NULL;
+    error_list=NULL;
     labels = NULL;
     point = &labels;
     for (i = 1; argv[i]; i++)
@@ -76,8 +75,8 @@ int main(int argc, char *argv[])
         if (error)
         {
             printf("error\n");
-            return 1;
             create_error_file(error_list);
+            continue;
         }
         while (*point)
         {
@@ -121,8 +120,8 @@ int main(int argc, char *argv[])
         if (error)
         {
             printf("error\n");
-            return 1;
             create_error_file(error_list);
+            continue;
         }
         name = strtok(name, ".");
         create_files(code, data, labels, argv[i]);

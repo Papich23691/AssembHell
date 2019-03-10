@@ -5,6 +5,12 @@
 #include <string.h>
 #include <stddef.h>
 
-char *duplicate_string(const char *str);
+/*
+* @breif duplicates a given string to a new one
+* 
+* @param str the string to duplicate
+* @return the duplicated string
+*/
+char* duplicate_string(const char *str);
 
 #endif

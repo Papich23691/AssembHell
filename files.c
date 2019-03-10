@@ -30,6 +30,7 @@ void create_files(unsigned int code[1024], unsigned int data[1024], label_t *lab
 {
   FILE *fp;
   char con[3];
+  int flag=0;
   int i;
   label_t *curr = labels;
   char *fn = (char *)malloc(sizeof(name) + 4);
@@ -49,18 +50,28 @@ void create_files(unsigned int code[1024], unsigned int data[1024], label_t *lab
   fp = fopen(fn, "w+");
   while (curr)
   {
-    if (curr->type == ENTRYL)
+    if (curr->type == ENTRYL){
+      flag=1;
       fprintf(fp, "%s\t%d\n", curr->name, curr->address);
+    }
     curr = curr->next;
   }
   fclose(fp);
+  if (!flag){
+    remove(fn);
+  }
+  flag=0;
   sprintf(fn, "%s.ext", name);
   fp = fopen(fn, "w+");
   curr = ext;
   while (curr)
   {
+    flag=1;
     fprintf(fp, "%s\t%d\n", curr->name, curr->address);
     curr = curr->next;
   }
   fclose(fp);
+  if (!flag){
+    remove(fn);
+  }
 }

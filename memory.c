@@ -6,10 +6,10 @@
 #define REGISTER_SIZE 3
 #define SOURCE_REGISTER 128
 #define DEST_REGISTER 4
+#define START 100
 
 int update_code(int run, char *tok, char *line_s, unsigned int line_index, char *fname, unsigned int *code, label_t **labels)
 {
-
     unsigned int parse = 0, i = 0, reg = 0;
     char *label, *args = line_s;
     label_t **curr = labels;
@@ -23,6 +23,11 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
         if (i == OPCODE_NUM)
         {
             add_front(&error_list, line_index, fname, "Unknown opcode");
+            return 1;
+        }
+        if (comma_check(i, args, 0))
+        {
+            add_front(&error_list, line_index, fname, "Inappropriate use of commas");
             return 1;
         }
         parse = 0;
@@ -186,7 +191,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                     {
                         label = (char *)malloc(sizeof(args));
                         strncpy(label, args, strlen(args));
-                        add_label(EXTERNL, label, IC + 100, &ext);
+                        add_label(EXTERNL, label, IC + START, &ext);
                         parse += 1;
                         break;
                     }
@@ -218,7 +223,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                     {
                         label = (char *)malloc(sizeof(args));
                         strncpy(label, args, strlen(args));
-                        add_label(EXTERNL, label, IC + 100, &ext);
+                        add_label(EXTERNL, label, IC + START, &ext);
                         parse += 1;
                         break;
                     }
@@ -253,7 +258,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                     {
                         label = (char *)malloc(sizeof(args));
                         strncpy(label, args, strlen(args));
-                        add_label(EXTERNL, label, IC + 100, &ext);
+                        add_label(EXTERNL, label, IC + START, &ext);
                         parse += 1;
                         break;
                     }
@@ -282,31 +287,48 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
 
 int update_data(char *tok, char *line, unsigned int *data, unsigned int line_index, char *fname)
 {
-    char *args = line;
-    unsigned int parse = 0, i;
+    char *args = duplicate_string(line);
+    unsigned int parse = 0, i, argument = 0;
     if (!strcmp(tok, ".data"))
     {
-        args = strtok(line, " , ");
+        args = strtok(args, " , ");
         while (args)
         {
             if (parse_data(args, NUM_DATA, &parse, line_index, fname))
                 return 1;
             data[DC] = parse;
             DC++;
+            ++argument;
             args = strtok(NULL, " , ");
+        }
+        if (comma_check(OPCODE_NUM, line, argument))
+        {
+             add_front(&error_list, line_index, fname, "Inappropriate use of commas");
+            return 1;
         }
     }
     else
     {
-        if (line[0] != '"' || line[strlen(line) - 1] != '"')
+        if (line[0] != '"')
         {
             return 1;
         }
-        for (i = 1; i < strlen(line) - 1; i++)
+        for (i = 1; i < strlen(args) - 1 && args[i] != '"'; i++)
         {
             parse_data(args + i, CHAR_DATA, &parse, line_index, fname);
             data[DC] = parse;
             DC++;
+        }
+        if (i == strlen(args) - 1 && args[i] != '"')
+        {
+            add_front(&error_list, line_index, fname, "Missing a closing \"");
+            return 1;
+        }
+        args = strtok(args + i + 1, " ");
+        if (args)
+        {
+            add_front(&error_list, line_index, fname, "Extraneous text after end of command");
+            return 1;
         }
         data[DC] = 0;
         DC++;
@@ -334,19 +356,39 @@ void add_label(int type, char *name, int address, label_t **labels)
 
 int add_data_label(unsigned int line_index, char *fname, char *name, label_t **labels)
 {
+    label_t **current_node = labels;
+    while (*current_node)
+    {
+        if (!strcmp((*current_node)->name, name))
+        {
+            add_front(&error_list, line_index, fname, "Illegal label name");
+            return 1;
+        }
+        current_node = &(*current_node)->next;
+    }
     if (!is_type(name, LABELN))
     {
         add_front(&error_list, line_index, fname, "Illegal label name");
         return 1;
     }
-    add_label(DATAL, name, DC + 100, labels);
+    add_label(DATAL, name, DC + START, labels);
     return 0;
 }
 
 int add_extern_label(unsigned int line_index, char *fname, char *name, label_t **labels)
 {
+    label_t **current_node = labels;
     char *label = (char *)malloc(sizeof(name));
     strncpy(label, name, strlen(name));
+    while (*current_node)
+    {
+        if (!strcmp((*current_node)->name, name))
+        {
+            add_front(&error_list, line_index, fname, "Illegal label name");
+            return 1;
+        }
+        current_node = &(*current_node)->next;
+    }
     if (!is_type(label, LABELN))
     {
         add_front(&error_list, line_index, fname, "Illegal label name");
@@ -373,7 +415,7 @@ int add_code_label(unsigned int line_index, char *fname, char *name, label_t **l
         }
         current_node = &(*current_node)->next;
     }
-    add_label(CODEL, name, IC + 100, labels);
+    add_label(CODEL, name, IC + START, labels);
     return 0;
 }
 
@@ -390,9 +432,15 @@ int update_entry(unsigned int line_index, char *fname, char *name, label_t **lab
         }
         current_node = &(*current_node)->next;
     }
-    if (!current_node)
+    if (!(*current_node))
     {
         add_front(&error_list, line_index, fname, "Unkown label");
+        return 1;
+    }
+    name = strtok(NULL, " ");
+    if (name)
+    {
+        add_front(&error_list, line_index, fname, "Extraneous text after end of command");
         return 1;
     }
     return 0;

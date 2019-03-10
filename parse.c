@@ -12,6 +12,41 @@
 
 char *key_words[] = {"mov", "cmp", "add", "sub", "not", "clr", "lea", "inc", "dec", "jmp", "bne", "red", "prn", "jsr", "rts", "stop", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "data", "string", "entry", "extern"};
 
+int comma_check(int opcode, char *arguments, int data)
+{
+    if (arguments)
+    {
+        int i, comma = 0;
+        for (i = 0; i < strlen(arguments); i++)
+        {
+            if (arguments[i] == ',')
+            {
+                if (i != strlen(arguments) - 1 && arguments[i] == arguments[i + 1])
+                {
+                    return 1;
+                }
+                ++comma;
+            }
+        }
+        if (opcode <= SUB || opcode == LEA)
+        {
+            if (comma < 1 || comma > 1)
+                return 1;
+        }
+        else if (opcode < OPCODE_NUM)
+        {
+            if (comma > 0)
+                return 1;
+        }
+        else if (opcode == OPCODE_NUM)
+        {
+            if (comma < data - 1 || comma > data - 1)
+                return 1;
+        }
+    }
+    return 0;
+}
+
 int find_opcode(char *tok)
 {
     int i;

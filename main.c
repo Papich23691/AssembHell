@@ -6,10 +6,9 @@
 #include "files.h"
 #include "error.h"
 
-#define START 100
-
 extern int DC, IC;
 extern err_node_t *error_list;
+
 int main(int argc, char *argv[])
 {
     FILE *file = NULL;
@@ -34,7 +33,7 @@ int main(int argc, char *argv[])
         if (file == NULL)
         {
             printf("Error opening file\n");
-            return 1;
+            continue;
         }
         while (fgets(line_s, sizeof(line_s), file))
         {
@@ -76,10 +75,10 @@ int main(int argc, char *argv[])
         fclose(file);
         if (error)
         {
+            printf("error\n");
             return 1;
             create_error_file(error_list);
         }
-        printf("\n");
         while (*point)
         {
             if ((*point)->type == DATAL)
@@ -91,7 +90,7 @@ int main(int argc, char *argv[])
         if (file == NULL)
         {
             printf("Error opening file\n");
-            return 1;
+            continue;
         }
         line_index = 0;
         while (fgets(line_s, sizeof(line_s), file))
@@ -121,6 +120,7 @@ int main(int argc, char *argv[])
         }
         if (error)
         {
+            printf("error\n");
             return 1;
             create_error_file(error_list);
         }

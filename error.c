@@ -26,7 +26,6 @@ void display_list(err_node_t *head)
     err_node_t *current_node = head;
     while (current_node)
     {
-        printf("%p\n", current_node);
         printf("Error\n%s.\nFile: %s\tLine: %u\n", current_node->desc, current_node->fname, current_node->line);
         current_node = current_node->next;
     }

@@ -42,6 +42,7 @@ enum opcodes
     STOP
 };
 
+int comma_check(int opcode,char *arguments, int data);
 int is_type(char *token, int type);
 int parse_code(char *tok, char *line,unsigned int * parse,unsigned int line_index,char *fname);
 int find_opcode(char *tok);

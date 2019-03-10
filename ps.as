@@ -1,17 +1,7 @@
 ; file ps.as
-.entry LENGTH
-.extern W
-MAIN: mov @r3 ,LENGTH      
-LOOP: jmp L1
-prn -5 
-bne W
-sub @r1, @r4 
-bne L3
-L1: inc k
-.entry LOOP
-jmp W 
+mov @r4,@r6
+sub @r4,@r4
+Y8GEL: .string ""
+SOS: .data 5,6,7
 END: stop
-STR: .string "abcdef"
-LENGTH: .data 6,-9,15
-k: .data 22
-.extern L3
+

@@ -31,7 +31,7 @@ void display_list(err_node_t *head)
     }
 }
 
-void delete_list(err_node_t **root) {
+void delete_errors_list(err_node_t **root) {
   err_node_t *curr = *root, *tmp = NULL;
 
   while (curr != NULL) {

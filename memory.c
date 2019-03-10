@@ -11,8 +11,9 @@
 int update_code(int run, char *tok, char *line_s, unsigned int line_index, char *fname, unsigned int *code, label_t **labels)
 {
     unsigned int parse = 0, i = 0, reg = 0;
-    char *label, *args = line_s;
+    char *args = line_s;
     label_t **curr = labels;
+
     if (!run)
     {
         if (parse_code(tok, line_s, &parse, line_index, fname)) /* error */
@@ -189,9 +190,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 {
                     if (!strcmp(args, (*curr)->name) && (*curr)->type == EXTERNL)
                     {
-                        label = (char *)malloc(sizeof(args));
-                        strncpy(label, args, strlen(args));
-                        add_label(EXTERNL, label, IC + START, &ext);
+                        add_label(EXTERNL, args, IC + START, &ext);
                         parse += 1;
                         break;
                     }
@@ -221,9 +220,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 {
                     if (!strcmp(args, (*curr)->name) && (*curr)->type == EXTERNL)
                     {
-                        label = (char *)malloc(sizeof(args));
-                        strncpy(label, args, strlen(args));
-                        add_label(EXTERNL, label, IC + START, &ext);
+                        add_label(EXTERNL, args, IC + START, &ext);
                         parse += 1;
                         break;
                     }
@@ -256,9 +253,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 {
                     if (!strcmp(args, (*curr)->name) && (*curr)->type == EXTERNL)
                     {
-                        label = (char *)malloc(sizeof(args));
-                        strncpy(label, args, strlen(args));
-                        add_label(EXTERNL, label, IC + START, &ext);
+                        add_label(EXTERNL, args, IC + START, &ext);
                         parse += 1;
                         break;
                     }
@@ -340,12 +335,14 @@ void add_label(int type, char *name, int address, label_t **labels)
 {
     label_t **current_node = labels;
     label_t *new_node = (label_t *)malloc(sizeof(label_t));
+    
     while (*current_node && (*current_node)->next)
     {
         current_node = &(*current_node)->next;
     }
+    
     new_node->type = type;
-    new_node->name = name;
+    new_node->name = duplicate_string(name);
     new_node->address = address;
     new_node->next = NULL;
     if (*current_node)
@@ -378,8 +375,8 @@ int add_data_label(unsigned int line_index, char *fname, char *name, label_t **l
 int add_extern_label(unsigned int line_index, char *fname, char *name, label_t **labels)
 {
     label_t **current_node = labels;
-    char *label = (char *)malloc(sizeof(name));
-    strncpy(label, name, strlen(name));
+    char *label = duplicate_string(name);
+
     while (*current_node)
     {
         if (!strcmp((*current_node)->name, name))
@@ -401,6 +398,7 @@ int add_extern_label(unsigned int line_index, char *fname, char *name, label_t *
 int add_code_label(unsigned int line_index, char *fname, char *name, label_t **labels)
 {
     label_t **current_node = labels;
+
     if (!is_type(name, LABELN))
     {
         add_front(&error_list, line_index, fname, "Illegal label name");
@@ -444,4 +442,18 @@ int update_entry(unsigned int line_index, char *fname, char *name, label_t **lab
         return 1;
     }
     return 0;
+}
+
+void delete_errors_list(err_node_t **root) {
+  err_node_t *curr = *root, *tmp = NULL;
+
+  while (curr != NULL) {
+    tmp = curr;
+    curr = curr->next;
+    free(tmp->desc);
+    free(tmp->fname);
+    free(tmp);
+  }
+
+    *root = NULL;
 }

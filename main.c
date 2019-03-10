@@ -16,13 +16,11 @@ int main(int argc, char *argv[])
     char line_s[256];
     unsigned int line_index = 0;
     int i, error, flag = 0;
-    label_t *labels = (label_t *)malloc(sizeof(label_t));
-    label_t **point;
-    error_list = (err_node_t *)malloc(sizeof(err_node_t));
-    error_list->next = NULL;
-    labels = NULL;
-    point = &labels;
-    for (i = 1; argv[i]; i++)
+    label_t *labels = NULL;
+    label_t **point = &labels;
+    error_list = NULL;
+
+    for (i = 1; i < argc; ++i)
     {
         /* Initializtions */
         name = argv[i];
@@ -30,11 +28,13 @@ int main(int argc, char *argv[])
         DC = 0;
         IC = 0;
         file = fopen(name, "r");
+
         if (file == NULL)
         {
             printf("Error opening file\n");
             continue;
         }
+        
         while (fgets(line_s, sizeof(line_s), file))
         {
             ++line_index;
@@ -47,8 +47,7 @@ int main(int argc, char *argv[])
                 if (is_type(cmd, LABEL))
                 {
                     flag = 1;
-                    label = (char *)malloc(sizeof(cmd));
-                    strncpy(label, cmd, strlen(cmd) - 1);
+                    label = duplicate_string(cmd);
                     cmd = strtok(args, " ");
                     args = strtok(NULL, "\n");
                 }
@@ -72,26 +71,32 @@ int main(int argc, char *argv[])
                 }
             }
         }
+
         fclose(file);
+        
         if (error)
         {
             printf("error\n");
             return 1;
             create_error_file(error_list);
         }
+        
         while (*point)
         {
             if ((*point)->type == DATAL)
                 (*point)->address += IC;
             point = &(*point)->next;
         }
+        
         IC = 0;
         file = fopen(name, "r");
+        
         if (file == NULL)
         {
             printf("Error opening file\n");
             continue;
         }
+        
         line_index = 0;
         while (fgets(line_s, sizeof(line_s), file))
         {
@@ -118,15 +123,21 @@ int main(int argc, char *argv[])
                 }
             }
         }
+
         if (error)
         {
             printf("error\n");
             return 1;
             create_error_file(error_list);
         }
+
         name = strtok(name, ".");
         create_files(code, data, labels, argv[i]);
         free(labels);
     }
+
+    delete_errors_list(error_list);
+    
+
     return 0;
 }

@@ -12,7 +12,7 @@ extern err_node_t *error_list;
 int main(int argc, char *argv[])
 {
     FILE *file = NULL;
-    char *name = NULL, *cmd = NULL, *label = NULL, *args = NULL;
+    char *name = NULL, *cmd = NULL, *label = NULL, *sof_label = NULL, *args = NULL;
     char line_s[256];
     unsigned int line_index = 0;
     int i, error, flag = 0;
@@ -51,6 +51,7 @@ int main(int argc, char *argv[])
                     flag = 1;
                     cmd[strlen(cmd) - 1] = '\0';
                     label = duplicate_string(cmd);
+                    sof_label = label;
                     cmd = strtok(args, " ");
                     args = strtok(NULL, "\n");
                 }
@@ -73,7 +74,8 @@ int main(int argc, char *argv[])
                     error += update_code(0, cmd, args, line_index, name, code, &labels);
                 }
 
-                free(label);
+                free(sof_label);
+                sof_label = NULL;
             }
         }
 

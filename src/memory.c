@@ -275,7 +275,6 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
             ++IC;
         }
         return 0;
-        /*TODO second run*/
     }
     return 0;
 }

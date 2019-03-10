@@ -42,5 +42,6 @@ int add_code_label(unsigned int line_index, char *fname, char *name,label_t **la
 int update_code(int run, char *tok, char *line_s, unsigned int line_index, char *fname, unsigned int *code,label_t **labels);
 int update_entry(unsigned int line_index, char *fname, char *name,label_t **labels);
 void add_label(int type, char *name, int address,label_t **labels);
+void delete_labels_list(label_t **root);
 
 #endif

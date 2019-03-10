@@ -97,6 +97,8 @@ int is_type(char *token, int type)
 int parse_code(char *tok, char *line, unsigned int *parse, unsigned int line_index, char *fname)
 {
     char *args = (char *)malloc(sizeof(line));
+    char *start_of_args = args;
+
     int i = find_opcode(tok);
     if (line)
         strncpy(args, line, strlen(line));
@@ -159,6 +161,8 @@ int parse_code(char *tok, char *line, unsigned int *parse, unsigned int line_ind
         }
         /*1 argument*/
     }
+
+    free(start_of_args);
     return 0;
 }
 

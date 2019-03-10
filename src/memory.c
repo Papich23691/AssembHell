@@ -283,7 +283,9 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
 int update_data(char *tok, char *line, unsigned int *data, unsigned int line_index, char *fname)
 {
     char *args = duplicate_string(line);
+    char *start_of_args = args;
     unsigned int parse = 0, i, argument = 0;
+
     if (!strcmp(tok, ".data"))
     {
         args = strtok(args, " , ");
@@ -328,6 +330,8 @@ int update_data(char *tok, char *line, unsigned int *data, unsigned int line_ind
         data[DC] = 0;
         DC++;
     }
+
+    free(start_of_args);
     return 0;
 }
 

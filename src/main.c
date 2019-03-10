@@ -72,6 +72,8 @@ int main(int argc, char *argv[])
                         error += add_code_label(line_index, name, label, &labels);
                     error += update_code(0, cmd, args, line_index, name, code, &labels);
                 }
+
+                free(label);
             }
         }
 

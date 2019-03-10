@@ -7,11 +7,11 @@
 #define SOURCE_REGISTER 128
 #define DEST_REGISTER 4
 
-int update_code(int run, char *tok, char *line_s, unsigned int line_index, char *fname, unsigned int *code, label_t *labels)
+int update_code(int run, char *tok, char *line_s, unsigned int line_index, char *fname, unsigned int *code, label_t **labels)
 {
     int parse = 0, i = 0, reg = 0;
     char *args = line_s;
-    label_t *curr = labels;
+    label_t **curr = labels;
     if (!run)
     {
         if (parse_code(tok, line_s, &parse, line_index, fname)) /* error */
@@ -175,6 +175,7 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
     }
     else
     {
+
         i = find_opcode(tok);
         args = strtok(args, " , ");
         ++IC;
@@ -182,15 +183,26 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
         {
             if (is_type(args, LABELN))
             {
-                while (curr->next)
+                while (*curr)
                 {
-                    if (!strcmp(args, curr->name) && curr->type == EXTERNL)
+                    if (!strcmp(args, (*curr)->name) && (*curr)->type == EXTERNL)
+                    {
                         parse += 1;
-                    else if (!strcmp(args, curr->name))
+                        break;
+                    }
+                    else if (!strcmp(args, (*curr)->name))
                     {
                         parse += RELOCATION;
-                        parse += curr->address * DEST_REGISTER;
+                        parse += (*curr)->address * DEST_REGISTER;
+                        break;
                     }
+                    curr = &(*curr)->next;
+                }
+                if (!*curr)
+                {
+                    printf(" hi there line number %d\n", line_index);
+                    add_front(&error_list, line_index, fname, "Unkown label");
+                    return 1;
                 }
             }
             code[IC] = parse;
@@ -201,20 +213,26 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
 
             if (is_type(args, LABELN))
             {
-                while (curr->next)
+                while (*curr)
                 {
-                    if (!strcmp(args, curr->name) && curr->type == EXTERNL)
+                    if (!strcmp(args, (*curr)->name) && (*curr)->type == EXTERNL)
+                    {
                         parse += 1;
-                    else if (!strcmp(args, curr->name))
+                        break;
+                    }
+                    else if (!strcmp(args, (*curr)->name))
                     {
                         parse += RELOCATION;
-                        parse += curr->address * DEST_REGISTER;
+                        parse += (*curr)->address * DEST_REGISTER;
+                        break;
                     }
-                    else
-                    {
-                        add_front(&error_list, line_index, fname, "Unkown label");
-                        return 1;
-                    }
+                    curr = &(*curr)->next;
+                }
+                if (!*curr)
+                {
+                    printf(" hi there line number %d\n", line_index);
+                    add_front(&error_list, line_index, fname, "Unkown label");
+                    return 1;
                 }
             }
             code[IC] = parse;
@@ -225,15 +243,26 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
         {
             if (is_type(args, LABELN))
             {
-                while (curr->next)
+                while (*curr)
                 {
-                    if (!strcmp(args, curr->name) && curr->type == EXTERNL)
+                    if (!strcmp(args, (*curr)->name) && (*curr)->type == EXTERNL)
+                    {
                         parse += 1;
-                    else if (!strcmp(args, curr->name))
+                        break;
+                    }
+                    else if (!strcmp(args, (*curr)->name))
                     {
                         parse += RELOCATION;
-                        parse += curr->address * DEST_REGISTER;
+                        parse += (*curr)->address * DEST_REGISTER;
+                        break;
                     }
+                    curr = &(*curr)->next;
+                }
+                if (!*curr)
+                {
+                    printf(" hi there line number %d\n", line_index);
+                    add_front(&error_list, line_index, fname, "Unkown label");
+                    return 1;
                 }
             }
             code[IC] = parse;
@@ -279,78 +308,80 @@ int update_data(char *tok, char *line, unsigned int *data, unsigned int line_ind
     return 0;
 }
 
-void add_label(int type, char *name, int address, label_t *labels)
+void add_label(int type, char *name, int address, label_t **labels)
 {
-                printf("%s\n",name);
-    label_t *current_node = labels;
+    label_t **current_node = labels;
     label_t *new_node = (label_t *)malloc(sizeof(label_t));
+    while (*current_node && (*current_node)->next)
+    {
+        current_node = &(*current_node)->next;
+    }
     new_node->type = type;
     new_node->name = name;
     new_node->address = address;
     new_node->next = NULL;
-    while (current_node)
-    {
-        current_node = current_node->next;
-    }
-    current_node = new_node;
+    if (*current_node)
+        (*current_node)->next = new_node;
+    else
+        *labels = new_node;
 }
 
-int add_data_label(unsigned int line_index, char *fname, char *name, label_t *labels)
+int add_data_label(unsigned int line_index, char *fname, char *name, label_t **labels)
 {
     if (!is_type(name, LABELN))
     {
         add_front(&error_list, line_index, fname, "Illegal label name");
         return 1;
     }
-    add_label(DATAL, name, DC, labels);
+    add_label(DATAL, name, DC + 100, labels);
     return 0;
 }
 
-int add_extern_label(unsigned int line_index, char *fname, char *name, label_t *labels)
+int add_extern_label(unsigned int line_index, char *fname, char *name, label_t **labels)
 {
-    char *args = name;
-    if (!is_type(args, LABELN))
+    char *label=(char *)malloc(sizeof(name));
+    strncpy(label,name,strlen(name));
+    if (!is_type(label, LABELN))
     {
         add_front(&error_list, line_index, fname, "Illegal label name");
         return 1;
     }
-    add_label(EXTERNL, args, 0, labels);
+    add_label(EXTERNL, label, 0, labels);
     return 0;
 }
 
-int add_code_label(unsigned int line_index, char *fname, char *name, label_t *labels)
+int add_code_label(unsigned int line_index, char *fname, char *name, label_t **labels)
 {
-    label_t *current_node = labels;
+    label_t **current_node = labels;
     if (!is_type(name, LABELN))
     {
         add_front(&error_list, line_index, fname, "Illegal label name");
         return 1;
     }
-    while (current_node)
+    while (*current_node)
     {
-        if (!strcmp(current_node->name, name))
+        if (!strcmp((*current_node)->name, name))
         {
             add_front(&error_list, line_index, fname, "Illegal label name");
             return 1;
         }
-        current_node = current_node->next;
+        current_node = &(*current_node)->next;
     }
-    add_label(CODEL, name, IC, labels);
+    add_label(CODEL, name, IC + 100, labels);
     return 0;
 }
 
-int update_entry(unsigned int line_index, char *fname, char *name, label_t *labels)
+int update_entry(unsigned int line_index, char *fname, char *name, label_t **labels)
 {
-    label_t *current_node = labels;
-    while (current_node)
+    label_t **current_node = labels;
+    while (*current_node)
     {
-        if (!strcmp(current_node->name, name))
+        if (!strcmp((*current_node)->name, name))
         {
-            printf("%s\n", current_node->name);
-            current_node->type = ENTRYL;
+            (*current_node)->type = ENTRYL;
             break;
         }
-        current_node = current_node->next;
+        current_node = &(*current_node)->next;
     }
     if (!current_node)
     {

@@ -17,10 +17,11 @@ int main(int argc, char *argv[])
     char line_s[256];
     unsigned int line_index = 0;
     int i, error, flag = 0;
-    label_t *labels = NULL;
-    label_t *point = labels;
+    label_t *labels = (label_t *)malloc(sizeof(label_t));
     error_list = (err_node_t *)malloc(sizeof(err_node_t));
     error_list->next = NULL;
+    labels = NULL;
+    label_t **point = &labels;
     for (i = 1; argv[i]; i++)
     {
         /* Initializtions */
@@ -54,38 +55,36 @@ int main(int argc, char *argv[])
                 if (is_type(cmd, DATA))
                 {
                     if (flag)
-                        error += add_data_label(line_index, name, label, labels);
+                        error += add_data_label(line_index, name, label, &labels);
                     error += update_data(cmd, args, data, line_index, name);
                     continue;
                 }
                 else if (is_type(cmd, EXTERN))
                 {
-                    error += add_extern_label(line_index, name, args, labels);
+                    error += add_extern_label(line_index, name, args, &labels);
                     continue;
                 }
                 else if (is_type(cmd, CODE))
                 {
                     if (flag)
-                        error += add_code_label(line_index, name, label, labels);
-                    error += update_code(0, cmd, args, line_index, name, code, labels);
+                        error += add_code_label(line_index, name, label, &labels);
+                    error += update_code(0, cmd, args, line_index, name, code, &labels);
                 }
             }
         }
         fclose(file);
         if (error)
         {
-            printf("number of errors   %d", error);
             return 1;
             create_error_file(error_list);
         }
-        while (point)
+        while (*point)
         {
-            if (point->type == DATAL)
-                point->address += IC;
-            point = point->next;
+            if ((*point)->type == DATAL)
+                (*point)->address += IC;
+            point = &(*point)->next;
         }
         IC = 0;
-
         file = fopen(name, "r");
         if (file == NULL)
         {
@@ -97,25 +96,30 @@ int main(int argc, char *argv[])
         {
             if (line_s[0] != ';' && line_s[0] != '\n')
             {
-                                printf("%d \t%d\t%s\n", line_index, error, line_s);
-                char *cmd = strtok(line_s, " ");
+                printf("%d\t%s\n",line_index,line_s);
+                cmd = strtok(line_s, " ");
+                args = strtok(NULL, "\n");
                 if (is_type(cmd, DATA) || is_type(cmd, EXTERN))
                     continue;
                 if (is_type(cmd, LABEL))
-                    cmd = strtok(NULL, " ");
+                {
+                    cmd = strtok(args, " ");
+                    args = strtok(NULL, "\n");
+                }
                 if (is_type(cmd, ENTRY))
                 {
-                    error += update_entry(line_index, name, line_s, labels);
+                    error += update_entry(line_index, name, args, &labels);
                     continue;
                 }
                 if (is_type(cmd, CODE))
-                    error += update_code(1, cmd, line_s, line_index, name, code, labels);
+                {
+                    error += update_code(1, cmd, args, line_index, name, code, &labels);
+                }
             }
             ++line_index;
         }
         if (error)
         {
-            printf("fuck my life %d\n",error);
             return 1;
             create_error_file(error_list);
         }

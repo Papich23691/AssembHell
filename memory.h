@@ -20,10 +20,6 @@ enum labels
     EXTERNL
 };
 
-unsigned int code[1024];
-unsigned int data[1024];
-int DC, IC;
-err_node_t *error_list;
 
 typedef struct node
 {
@@ -33,12 +29,18 @@ typedef struct node
     struct node *next;
 } label_t;
 
-int add_data_label(unsigned int line_index, char *fname, char *name, label_t *labels);
+unsigned int code[1024];
+unsigned int data[1024];
+int DC, IC;
+err_node_t *error_list;
+
+
+int add_data_label(unsigned int line_index, char *fname, char *name,label_t **labels);
 int update_data(char *tok, char *line, unsigned int *data, unsigned int line_index, char *fname);
-int add_extern_label(unsigned int line_index, char *fname, char *name, label_t *labels);
-int add_code_label(unsigned int line_index, char *fname, char *name, label_t *labels);
-int update_code(int run, char *tok, char *line_s, unsigned int line_index, char *fname, unsigned int *code, label_t *labels);
-int update_entry(unsigned int line_index, char *fname, char *name, label_t *labels);
-void add_label(int type, char *name, int address, label_t *labels);
+int add_extern_label(unsigned int line_index, char *fname, char *name,label_t **labels);
+int add_code_label(unsigned int line_index, char *fname, char *name,label_t **labels);
+int update_code(int run, char *tok, char *line_s, unsigned int line_index, char *fname, unsigned int *code,label_t **labels);
+int update_entry(unsigned int line_index, char *fname, char *name,label_t **labels);
+void add_label(int type, char *name, int address,label_t **labels);
 
 #endif

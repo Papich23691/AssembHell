@@ -1,5 +1,5 @@
 #include "files.h"
-
+extern label_t *ext;
 const unsigned char base64_digset[B64_DIG_LEN] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -56,11 +56,10 @@ void create_files(unsigned int code[1024], unsigned int data[1024], label_t *lab
   fclose(fp);
   sprintf(fn, "%s.ext", name);
   fp = fopen(fn, "w+");
-  curr = labels;
+  curr = ext;
   while (curr)
   {
-    if (curr->type == EXTERNL)
-      fprintf(fp, "%s\t%d\n", curr->name, curr->address);
+    fprintf(fp, "%s\t%d\n", curr->name, curr->address);
     curr = curr->next;
   }
   fclose(fp);

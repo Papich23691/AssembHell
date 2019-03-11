@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
   unsigned int line_index = 0;
   int i, error, label_flag = 0;
   label_t *labels = NULL;
-  label_t **point = &labels;
+  label_t **point = NULL;
   error_list = NULL;
   ext = NULL;
 
@@ -32,6 +32,7 @@ int main(int argc, char *argv[])
   for (i = 1; i < argc; ++i)
   {
     /* Initializtions */
+    point=&labels;
     name = argv[i];
     error = 0;
     DC = 0;

@@ -1,0 +1,3 @@
+Error
+Unkown command.
+File: ps.as	Line: 8

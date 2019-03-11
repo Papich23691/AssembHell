@@ -21,9 +21,10 @@ int main(int argc, char *argv[])
   label_t *labels = NULL;
   label_t **point = &labels;
   error_list = NULL;
-  ext = NULL; 
+  ext = NULL;
 
-  if (argc < 2) {
+  if (argc < 2)
+  {
     printf("Error: No input file.\nUsage: %s <asm files>\n", argv[0]);
   }
 
@@ -100,6 +101,12 @@ int main(int argc, char *argv[])
           /* Adds code words to memory */
           error += update_code(0, cmd, args, line_index, name, code, &labels);
         }
+        else if (!is_type(cmd, ENTRY))
+        {
+          add_front(&error_list, line_index, name, "Unkown command");
+          ++error;
+        }
+
         free(sof_label);
         sof_label = NULL;
       }
@@ -108,6 +115,7 @@ int main(int argc, char *argv[])
     /* Error during first cycle */
     if (error)
     {
+      printf("\033[0;31mError\033[0m\n");
       create_error_file(error_list);
       continue;
     }
@@ -169,6 +177,7 @@ int main(int argc, char *argv[])
     /* Error during second cycle */
     if (error)
     {
+      printf("\033[0;31mError\033[0m\n");
       create_error_file(error_list);
       continue;
     }
@@ -177,12 +186,13 @@ int main(int argc, char *argv[])
     /* Create output files */
     create_files(code, data, labels, argv[i]);
     fclose(file);
+    delete_labels_list(&ext);
+    delete_labels_list(&labels);
+    printf("\033[0;32m Successfuly assembled %s\033[0m\n", argv[i]);
   }
 
   /* Free stored memory */
   delete_errors_list(&error_list);
-  delete_labels_list(&ext);
-  delete_labels_list(&labels);
 
   return 0;
 }

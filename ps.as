@@ -1,12 +1,8 @@
-MAIN: mov @r3 ,LENGTH
-LOOP: jmp L1 
-prn -5
-bne LOOP 
-sub @r1, @r4
-bne END
-L1: inc K
-bne LOOP
-END: stop 
-STR: .string "abcdef"
-LENGTH: .data 9,-15,6 
-K: .data 22
+sub @r4,KK
+OUT: .data 6,76
+STR: .string "yagel"
+.srsrgsrentry KK
+mov 5,OUT
+bne OUT
+.extern KK
+bne KK

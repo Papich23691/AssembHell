@@ -2,45 +2,77 @@
 #include "parse.h"
 #include <string.h>
 
+/*
+* Register Num is the char of the register number (@r'5')
+* Register Size is number of register operand ("@r4")
+* Source Register is used to add the value of the register to the source bits
+* Dest Register is used to add the value of the register to the dest bits
+* Start is the start of memory
+*/
 #define REGISTER_NUM 2
 #define REGISTER_SIZE 3
 #define SOURCE_REGISTER 128
 #define DEST_REGISTER 4
 #define START 100
 
-int update_code(int run, char *tok, char *line_s, unsigned int line_index, char *fname, unsigned int *code, label_t **labels)
+/**
+ * @brief Adds code words to memory
+ * first cycle - adds code words except labels
+ * second cycle - adds label code words
+ * 
+ * @param run 0 = first cycle , 1 = second cycle
+ * @param tok The opcode
+ * @param line_s The string of rest of the line
+ * @param line_index Number of current line
+ * @param fname Name of current file
+ * @param code Memory of code words
+ * @param labels Labels table
+ * @return int returns 1 if error
+ */
+int update_code(int run, char *tok, char *line_s, unsigned int line_index,
+                char *fname, unsigned int *code, label_t **labels)
 {
-    unsigned int parse = 0, i = 0, reg = 0;
+    /*
+    *  parse - Holds value code word
+    *  opnum - Number representing the opcode
+    *  first_register - Used to determine if both operands are register and if so add only one code word
+    *  args - arguments
+    *  curr - pointer to head of labels used in second cycle
+    */
+    unsigned int parse = 0, opnum = 0, first_register = 0;
     char *args = line_s;
     label_t **curr = labels;
 
+    /* First cycle */
     if (!run)
     {
+        /* Adds operand code word to memory */
         if (parse_code(tok, line_s, &parse, line_index, fname)) /* error */
             return 1;
         code[IC] = parse;
         ++IC;
-        i = find_opcode(tok);
-        if (i == OPCODE_NUM)
+        opnum = find_opcode(tok);
+        if (opnum == OPCODE_NUM)
         {
             add_front(&error_list, line_index, fname, "Unknown opcode");
             return 1;
         }
-        if (comma_check(i, args, 0))
+        if (comma_check(opnum, args, 0))
         {
             add_front(&error_list, line_index, fname, "Inappropriate use of commas");
             return 1;
         }
         parse = 0;
         args = strtok(args, " , ");
-        /*////////////////////////////////////////////////////////////////// opcode stuff ^^^^^^^^^^^^^^^^^^^^^ */
-        if (i <= SUB || i == LEA)
+        /* Opcode with 2 operands */
+        if (opnum <= SUB || opnum == LEA)
         {
             if (!args)
             {
                 add_front(&error_list, line_index, fname, "Not enough arguments");
                 return 1;
             }
+            /* First - register operand */
             if (is_type(args, REGISTER))
             {
                 if (strlen(args) < REGISTER_SIZE)
@@ -50,17 +82,20 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 }
                 else if (args[REGISTER_NUM] > '9' || args[REGISTER_NUM] < '0')
                 {
-                    add_front(&error_list, line_index, fname, "Registers represented by numbers");
+                    add_front(&error_list, line_index, fname,
+                              "Registers represented by numbers");
                     return 1;
                 }
                 else if (strlen(args) > REGISTER_SIZE)
                 {
-                    add_front(&error_list, line_index, fname, "Register name longer than accepted");
+                    add_front(&error_list, line_index, fname,
+                              "Register name longer than accepted");
                     return 1;
                 }
                 parse += atoi(&args[REGISTER_NUM]) * SOURCE_REGISTER;
-                reg = 1;
+                first_register = 1;
             }
+            /* First - number operand */
             else if (is_type(args, NUMBER))
             {
                 parse += atoi(args) * DEST_REGISTER;
@@ -70,41 +105,50 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 add_front(&error_list, line_index, fname, "Unknown argument");
                 return 1;
             }
-            /*************************** first argument ^^^^^^ *********************************************/
+
             args = strtok(NULL, " , ");
             if (!args)
             {
                 add_front(&error_list, line_index, fname, "Not enough arguments");
                 return 1;
             }
-            if (!reg)
+            /* 
+            *  If the first argument wasn't a register add to memory
+            *  Otherwise checks if second argument is also register
+            */
+            if (!first_register)
             {
                 code[IC] = parse;
                 parse = 0;
                 ++IC;
             }
+            /* Second - register operand */
             if (is_type(args, REGISTER))
             {
                 if (strlen(args) < REGISTER_SIZE)
                 {
-                    add_front(&error_list, line_index, fname, "Unknown register number");
+                    add_front(&error_list, line_index, fname, "Unknown register");
                     return 1;
                 }
                 else if (args[REGISTER_NUM] > '9' || args[REGISTER_NUM] < '0')
                 {
-                    add_front(&error_list, line_index, fname, "Registers represented by numbers");
+                    add_front(&error_list, line_index, fname,
+                              "Registers represented by numbers");
                     return 1;
                 }
                 else if (strlen(args) > REGISTER_SIZE)
                 {
-                    add_front(&error_list, line_index, fname, "Register name longer than accepted");
+                    add_front(&error_list, line_index, fname,
+                              "Register name longer than accepted");
                     return 1;
                 }
                 parse += atoi(&args[REGISTER_NUM]) * DEST_REGISTER;
             }
+            /* Second - number operand */
             else if (is_type(args, NUMBER))
             {
-                if (reg)
+                /* Adds to memory */
+                if (first_register)
                 {
                     code[IC] = parse;
                     ++IC;
@@ -112,9 +156,11 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 parse = 0;
                 parse += atoi(args) * DEST_REGISTER;
             }
+            /* Second - label operand */
             else if (is_type(args, LABELN))
             {
-                if (reg)
+                /* Adds to memory */
+                if (first_register)
                 {
                     code[IC] = parse;
                     ++IC;
@@ -126,18 +172,18 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 add_front(&error_list, line_index, fname, "Unknown argument");
                 return 1;
             }
-            /*************************** second argument ^^^^^^ *********************************************/
             code[IC] = parse;
             ++IC;
         }
-        /*////////////////////////////////////////////////////////////////// 2 arguments ^^^^^^^ */
-        else if (i == NOT || i == CLR || (LEA < i && i < RTS))
+        /* Opcode with 1 operand */
+        else if (opnum == NOT || opnum == CLR || (LEA < opnum && opnum < RTS))
         {
             if (!args)
             {
                 add_front(&error_list, line_index, fname, "Not enough arguments");
                 return 1;
             }
+            /* Register operand */
             if (is_type(args, REGISTER))
             {
                 if (strlen(args) < REGISTER_SIZE)
@@ -147,19 +193,22 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 }
                 else if (args[REGISTER_NUM] > '9' || args[REGISTER_NUM] < '0')
                 {
-                    add_front(&error_list, line_index, fname, "Registers represented by numbers");
+                    add_front(&error_list, line_index, fname,
+                              "Registers represented by numbers");
                     return 1;
                 }
                 else if (strlen(args) > REGISTER_SIZE)
                 {
-                    add_front(&error_list, line_index, fname, "Register name longer than accepted");
+                    add_front(&error_list, line_index, fname,
+                              "Register name longer than accepted");
                     return 1;
                 }
-                parse += atoi(&args[REGISTER_NUM]) * SOURCE_REGISTER;
+                parse = atoi(&args[REGISTER_NUM]) * DEST_REGISTER;
             }
+            /* Number operand */
             else if (is_type(args, NUMBER))
             {
-                parse += atoi(args) * SOURCE_REGISTER;
+                parse = atoi(args) * DEST_REGISTER;
             }
             else if (!is_type(args, LABELN))
             {
@@ -169,31 +218,36 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
             code[IC] = parse;
             ++IC;
         }
-        /*////////////////////////////////////////////////////////////////// 1 argument ^^^^^^^^ */
         args = strtok(NULL, " , ");
         if (args)
         {
-            add_front(&error_list, line_index, fname, "Extraneous text after end of command");
+            add_front(&error_list, line_index, fname,
+                      "Extraneous text after end of command");
             return 1;
         }
     }
+    /* Second cycle */
     else
     {
-        i = find_opcode(tok);
+        opnum = find_opcode(tok);
         args = strtok(args, " , ");
         ++IC;
-        if (i <= SUB || i == LEA)
+        /* Opcode with 2 operands */
+        if (opnum <= SUB || opnum == LEA)
         {
+            /* First - label operand */
             if (is_type(args, LABELN))
             {
                 while (*curr)
                 {
+                     /* If extern passes only 1 */
                     if (!strcmp(args, (*curr)->name) && (*curr)->type == EXTERNL)
                     {
                         add_label(EXTERNL, args, IC + START, &ext);
                         parse += 1;
                         break;
                     }
+                    /* Passes space in memory */
                     else if (!strcmp(args, (*curr)->name))
                     {
                         parse += RELOCATION;
@@ -209,21 +263,29 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                 }
                 code[IC] = parse;
             }
+            /* First - not register operand */
             if (!is_type(args, REGISTER))
                 ++IC;
+            /* First - register operand */
+            else 
+                first_register=1;
+            
             parse = 0;
             args = strtok(NULL, " , ");
             curr = labels;
+            /* Second - label operand */
             if (is_type(args, LABELN))
             {
                 while (*curr)
                 {
+                     /* If extern passes only 1 */
                     if (!strcmp(args, (*curr)->name) && (*curr)->type == EXTERNL)
                     {
                         add_label(EXTERNL, args, IC + START, &ext);
                         parse += 1;
                         break;
                     }
+                    /* Passes space in memory */
                     else if (!strcmp(args, (*curr)->name))
                     {
                         parse += RELOCATION;
@@ -237,26 +299,33 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
                     add_front(&error_list, line_index, fname, "Unkown label");
                     return 1;
                 }
-                ++IC;
+                /* If first argument was a register*/
+                if (first_register)
+                    ++IC;
                 code[IC] = parse;
             }
-            else if (!is_type(args, REGISTER))
+            /* If first argument was a register*/
+            else if (!is_type(args,REGISTER) && first_register)
                 ++IC;
+            /* Second - label operand */
             ++IC;
-            /*TODO second run*/
         }
-        else if (i == NOT || i == CLR || (LEA < i && i < RTS))
+        /* Opcode with 1 operand */
+        else if (opnum == NOT || opnum == CLR || (LEA < opnum && opnum < RTS))
         {
+            /* Label operand */
             if (is_type(args, LABELN))
             {
                 while (*curr)
                 {
+                    /* If extern passes only 1 */
                     if (!strcmp(args, (*curr)->name) && (*curr)->type == EXTERNL)
                     {
                         add_label(EXTERNL, args, IC + START, &ext);
                         parse += 1;
                         break;
                     }
+                    /* Passes space in memory */
                     else if (!strcmp(args, (*curr)->name))
                     {
                         parse += RELOCATION;
@@ -274,20 +343,43 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index, char 
             }
             ++IC;
         }
-        return 0;
     }
     return 0;
 }
 
-int update_data(char *tok, char *line, unsigned int *data, unsigned int line_index, char *fname)
+/**
+ * @brief Adds data words to memory
+ * 
+ * @param tok Data type
+ * @param line Arguments
+ * @param data Memory of data words
+ * @param line_index Number of current line
+ * @param fname Name of current file
+ * @return int returns 1 if error
+ */
+int update_data(char *tok, char *line, unsigned int *data,
+                unsigned int line_index, char *fname)
 {
+    /*
+    *  parse - Holds value data word
+    *  i - iterator
+    *  start_of_args - Used to free args
+    *  args - arguments
+    *  argument - Number of arguments in number type used in comma check
+    */
     char *args = duplicate_string(line);
     char *start_of_args = args;
     unsigned int parse = 0, i, argument = 0;
-
+    if (!line)
+    {
+         add_front(&error_list, line_index, fname, "Arguments missing");
+            return 1;
+    }
+    /* Number type */
     if (!strcmp(tok, ".data"))
     {
         args = strtok(args, " , ");
+        /* Adds each num to memory */
         while (args)
         {
             if (parse_data(args, NUM_DATA, &parse, line_index, fname))
@@ -299,22 +391,27 @@ int update_data(char *tok, char *line, unsigned int *data, unsigned int line_ind
         }
         if (comma_check(OPCODE_NUM, line, argument))
         {
-             add_front(&error_list, line_index, fname, "Inappropriate use of commas");
+            add_front(&error_list, line_index, fname, "Inappropriate use of commas");
             return 1;
         }
     }
+    /* String type */
     else
     {
+        /* Check if stars with " */
         if (line[0] != '"')
         {
+            add_front(&error_list, line_index, fname, "Missing a closing \"");
             return 1;
         }
+        /* Adds each char to memory */
         for (i = 1; i < strlen(args) - 1 && args[i] != '"'; i++)
         {
             parse_data(args + i, CHAR_DATA, &parse, line_index, fname);
             data[DC] = parse;
             DC++;
         }
+        /* Check if end with " */
         if (i == strlen(args) - 1 && args[i] != '"')
         {
             add_front(&error_list, line_index, fname, "Missing a closing \"");
@@ -323,9 +420,11 @@ int update_data(char *tok, char *line, unsigned int *data, unsigned int line_ind
         args = strtok(args + i + 1, " ");
         if (args)
         {
-            add_front(&error_list, line_index, fname, "Extraneous text after end of command");
+            add_front(&error_list, line_index, fname,
+                      "Extraneous text after end of command");
             return 1;
         }
+        /* Adds '\0' */
         data[DC] = 0;
         DC++;
     }
@@ -334,26 +433,37 @@ int update_data(char *tok, char *line, unsigned int *data, unsigned int line_ind
     return 0;
 }
 
+/**
+ * @brief Adds node to linked list
+ * 
+ * @param type Label type
+ * @param name Label name
+ * @param address Label address
+ * @param labels Head of linked list
+ */
 void add_label(int type, char *name, int address, label_t **labels)
 {
-    label_t *new_node = (label_t*)malloc(sizeof(label_t));
+    label_t *new_node = (label_t *)malloc(sizeof(label_t));
 
     new_node->type = type;
     new_node->name = duplicate_string(name);
     new_node->address = address;
     new_node->next = NULL;
 
-    if (*labels == NULL) {
+    if (*labels == NULL)
+    {
         *labels = new_node;
     }
-    else if ((*labels)->next == NULL) {
+    else if ((*labels)->next == NULL)
+    {
         (*labels)->next = new_node;
     }
     else
     {
         label_t *current = *labels;
-        while (true) {
-            if(current->next == NULL)
+        while (true)
+        {
+            if (current->next == NULL)
             {
                 current->next = new_node;
                 return;
@@ -363,7 +473,17 @@ void add_label(int type, char *name, int address, label_t **labels)
     }
 }
 
-int add_data_label(unsigned int line_index, char *fname, char *name, label_t **labels)
+/**
+ * @brief Adds label of type data
+ * 
+ * @param line_index Index of current line
+ * @param fname Name of current file
+ * @param name Name of label
+ * @param labels Head of linked list
+ * @return int Return 1 if error
+ */
+int add_data_label(unsigned int line_index, char *fname, char *name,
+                   label_t **labels)
 {
     label_t **current_node = labels;
 
@@ -378,8 +498,6 @@ int add_data_label(unsigned int line_index, char *fname, char *name, label_t **l
     }
     if (!is_type(name, LABELN))
     {
-        printf("%s\n", name);
-
         add_front(&error_list, line_index, fname, "Illegal label name");
         return 1;
     }
@@ -387,7 +505,17 @@ int add_data_label(unsigned int line_index, char *fname, char *name, label_t **l
     return 0;
 }
 
-int add_extern_label(unsigned int line_index, char *fname, char *name, label_t **labels)
+/**
+ * @brief Adds label of type extern
+ * 
+ * @param line_index Index of current line
+ * @param fname Name of current file
+ * @param name Name of label
+ * @param labels Head of linked list
+ * @return int Return 1 if error
+ */
+int add_extern_label(unsigned int line_index, char *fname, char *name,
+                     label_t **labels)
 {
     label_t **current_node = labels;
     char *label = duplicate_string(name);
@@ -410,7 +538,17 @@ int add_extern_label(unsigned int line_index, char *fname, char *name, label_t *
     return 0;
 }
 
-int add_code_label(unsigned int line_index, char *fname, char *name, label_t **labels)
+/**
+ * @brief Adds label of type code
+ * 
+ * @param line_index Index of current line
+ * @param fname Name of current file
+ * @param name Name of label
+ * @param labels Head of linked list
+ * @return int Return 1 if error
+ */
+int add_code_label(unsigned int line_index, char *fname, char *name,
+                   label_t **labels)
 {
     label_t **current_node = labels;
 
@@ -432,7 +570,17 @@ int add_code_label(unsigned int line_index, char *fname, char *name, label_t **l
     return 0;
 }
 
-int update_entry(unsigned int line_index, char *fname, char *name, label_t **labels)
+/**
+ * @brief Update each entry label in label table
+ * 
+ * @param line_index Index of current line
+ * @param fname Name of current file
+ * @param name Name of label
+ * @param labels Head of linked list
+ * @return int Return 1 if error
+ */
+int update_entry(unsigned int line_index, char *fname, char *name,
+                 label_t **labels)
 {
     label_t **current_node = labels;
     name = strtok(name, " ");
@@ -453,21 +601,29 @@ int update_entry(unsigned int line_index, char *fname, char *name, label_t **lab
     name = strtok(NULL, " ");
     if (name)
     {
-        add_front(&error_list, line_index, fname, "Extraneous text after end of command");
+        add_front(&error_list, line_index, fname,
+                  "Extraneous text after end of command");
         return 1;
     }
     return 0;
 }
 
-void delete_labels_list(label_t **root) {
-  label_t *curr = *root, *tmp = NULL;
+/**
+ * @brief Deletes linked lists from memory
+ * 
+ * @param root Root of linked list
+ */
+void delete_labels_list(label_t **root)
+{
+    label_t *curr = *root, *tmp = NULL;
 
-  while (curr != NULL) {
-    tmp = curr;
-    curr = curr->next;
-    free(tmp->name);
-    free(tmp);
-  }
+    while (curr != NULL)
+    {
+        tmp = curr;
+        curr = curr->next;
+        free(tmp->name);
+        free(tmp);
+    }
 
     *root = NULL;
 }

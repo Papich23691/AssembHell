@@ -4,3 +4,10 @@ OBJ = as
 
 all:
 	$(CC) $(SRC) -o $(OBJ) -ggdb3 -pedantic -ansi -Wall -Iinclude
+
+fuzz:
+	afl-gcc $(SRC) -o $(OBJ) -Iinclude
+
+
+fmt:
+	clang-format -i src/*.c include/*.h

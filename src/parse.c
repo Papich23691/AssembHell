@@ -218,7 +218,6 @@ int parse_code(char *tok, char *line, unsigned int *parse,
       *parse += DIRECT * FIRST_BITS;
     else
     {
-      printf("f%sf\n", args);
       add_front(&error_list, line_index, fname, "Unknown label");
       return 1;
     }

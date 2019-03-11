@@ -24,7 +24,7 @@ void create_error_file(err_node_t *errors);
  * @param labels Linked List of labels
  * @param name Name of the files
  */
-void create_files(unsigned int code[1024], unsigned int data[1024],
+void create_files(unsigned int code[MEMORY_SIZE], unsigned int data[MEMORY_SIZE],
                   label_t *labels, char *name);
 
 /**

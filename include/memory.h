@@ -9,8 +9,7 @@
 #define CHAR_DATA (1)
 #define RELOCATION 2
 #define WORD_SIZE (12)
-#define MAX_INT (2 ^ (WORD_SIZE - 1))
-#define MAX_UINT (2 ^ WORD_SIZE)
+#define MEMORY_SIZE 1024
 
 /* Label type */
 enum labels
@@ -29,8 +28,8 @@ typedef struct node
   struct node *next;
 } label_t;
 /* Memory */
-unsigned int code[1024];
-unsigned int data[1024];
+unsigned int code[MEMORY_SIZE];
+unsigned int data[MEMORY_SIZE];
 /* Memory counters */
 int DC, IC;
 /* Error stack and linked list of extern operands */

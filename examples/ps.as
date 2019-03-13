@@ -1,4 +1,4 @@
-sub @r4,KK
+       sub @r4,KK
 OUT: .data 6,76
 STR: .string "abc"
 .entry KK

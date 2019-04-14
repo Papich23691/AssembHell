@@ -11,6 +11,19 @@
 #define WORD_SIZE (12)
 #define MEMORY_SIZE 1024
 
+/*
+* Register Num is the char of the register number (@r'5')
+* Register Size is number of register operand ("@r4")
+* Source Register is used to add the value of the register to the source bits
+* Dest Register is used to add the value of the register to the dest bits
+* Start is the start of memory
+*/
+#define REGISTER_NUM 2
+#define REGISTER_SIZE 3
+#define SOURCE_REGISTER 128
+#define DEST_REGISTER 4
+#define START 100
+
 /* Label type */
 enum labels
 {

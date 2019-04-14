@@ -61,7 +61,7 @@ void first_cycle(FILE *file, int *error, char *name,unsigned int *line_index)
       else if (is_type(cmd, EXTERN))
       {
         /* Adds extern label to memory */
-        error += add_extern_label(*line_index, name, args, &labels);
+        *error += add_extern_label(*line_index, name, args, &labels);
         continue;
       }
       /* Line of code */
@@ -69,14 +69,14 @@ void first_cycle(FILE *file, int *error, char *name,unsigned int *line_index)
       {
         /* Initializtion of a label */
         if (label_flag)
-          error += add_code_label(*line_index, name, label, &labels);
+          *error += add_code_label(*line_index, name, label, &labels);
         /* Adds code words to memory */
-        error += update_code(0, cmd, args, *line_index, name, code, &labels);
+        *error += update_code(0, cmd, args, *line_index, name, code, &labels);
       }
       else if (!is_type(cmd, ENTRY))
       {
         add_front(&error_list, *line_index, name, "Unkown command");
-        ++error;
+        ++(*error);
       }
 
       free(sof_label);
@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
     /* Error during first cycle */
     if (error)
     {
-      printf("\033[0;31mError\033[0m\n");
+      printf("\033[0;31mError - 1\033[0m\n");
       create_error_file(error_list);
       continue;
     }
@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
     /* Error during second cycle */
     if (error)
     {
-      printf("\033[0;31mError\033[0m\n");
+      printf("\033[0;31mError - 2\033[0m\n");
       create_error_file(error_list);
       continue;
     }

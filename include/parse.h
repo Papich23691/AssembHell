@@ -70,7 +70,7 @@ int is_type(char *token, int type);
  *
  * @param tok The opcode
  * @param line The arguments
- * @param parse Pointer to the parse
+ * @param parse Pointer to the parsed word
  * @param line_index Index of the current line
  * @param fname Name of the current file
  *
@@ -109,5 +109,33 @@ int parse_data(char *tok, int data_type, unsigned int *parse,
  * @return if the label is valid
  */
 int is_valid_label(char *label);
+
+/**
+ * @brief Parse an operand to a create a word representing the operand
+ * 
+ * @param args The operand
+ * @param operand_num Number of operands
+ * @param parse Pointer to the parsed word
+ * @param first_register Determines if the first operand is a register
+ * @param line_index Index of the current line
+ * @param fname Name of the current file
+ * @return 1 if error
+ */
+int first_cycle_parse_operand(char * args,int operand_num, unsigned int * parse, unsigned int * first_register, int line_index,char * fname);
+
+/**
+ * @brief Parses labels using the label table created in first cycle
+ * 
+ * @param args The operand
+ * @param operand_num Number of operands
+ * @param parse Pointer to the parsed word
+ * @param first_register Determines if the first operand is a register
+ * @param curr Pointer to the head of the labels table
+ * @param line_index Index of the current line
+ * @param fname Name of the current file
+ * @return 1 if error
+ */
+int second_cycle_parse_operand(char * args,int operand_num, unsigned int * parse, unsigned int * first_register, label_t **curr,int line_index,char * fname);
+
 
 #endif

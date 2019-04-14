@@ -2,19 +2,6 @@
 #include "parse.h"
 #include <string.h>
 
-/*
-* Register Num is the char of the register number (@r'5')
-* Register Size is number of register operand ("@r4")
-* Source Register is used to add the value of the register to the source bits
-* Dest Register is used to add the value of the register to the dest bits
-* Start is the start of memory
-*/
-#define REGISTER_NUM 2
-#define REGISTER_SIZE 3
-#define SOURCE_REGISTER 128
-#define DEST_REGISTER 4
-#define START 100
-
 /**
  * @brief Adds code words to memory
  * first cycle - adds code words except labels
@@ -67,51 +54,8 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index,
         /* Opcode with 2 operands */
         if (opnum <= SUB || opnum == LEA)
         {
-            if (!args)
-            {
-                add_front(&error_list, line_index, fname, "Not enough arguments");
-                return 1;
-            }
-            /* First - register operand */
-            if (is_type(args, REGISTER))
-            {
-                if (strlen(args) < REGISTER_SIZE)
-                {
-                    add_front(&error_list, line_index, fname, "Unknown register number");
-                    return 1;
-                }
-                else if (args[REGISTER_NUM] > '9' || args[REGISTER_NUM] < '0')
-                {
-                    add_front(&error_list, line_index, fname,
-                              "Registers represented by numbers");
-                    return 1;
-                }
-                else if (strlen(args) > REGISTER_SIZE)
-                {
-                    add_front(&error_list, line_index, fname,
-                              "Register name longer than accepted");
-                    return 1;
-                }
-                parse += atoi(&args[REGISTER_NUM]) * SOURCE_REGISTER;
-                first_register = 1;
-            }
-            /* First - number operand */
-            else if (is_type(args, NUMBER))
-            {
-                parse += atoi(args) * DEST_REGISTER;
-            }
-            else if (!is_type(args, LABELN))
-            {
-                add_front(&error_list, line_index, fname, "Unknown argument");
-                return 1;
-            }
-
+            if (first_cycle_parse_operand(args,2,&parse,&first_register,line_index,fname)) return 1;
             args = strtok(NULL, " , ");
-            if (!args)
-            {
-                add_front(&error_list, line_index, fname, "Not enough arguments");
-                return 1;
-            }
             /* 
             *  If the first argument wasn't a register add to memory
             *  Otherwise checks if second argument is also register
@@ -122,99 +66,14 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index,
                 parse = 0;
                 ++IC;
             }
-            /* Second - register operand */
-            if (is_type(args, REGISTER))
-            {
-                if (strlen(args) < REGISTER_SIZE)
-                {
-                    add_front(&error_list, line_index, fname, "Unknown register");
-                    return 1;
-                }
-                else if (args[REGISTER_NUM] > '9' || args[REGISTER_NUM] < '0')
-                {
-                    add_front(&error_list, line_index, fname,
-                              "Registers represented by numbers");
-                    return 1;
-                }
-                else if (strlen(args) > REGISTER_SIZE)
-                {
-                    add_front(&error_list, line_index, fname,
-                              "Register name longer than accepted");
-                    return 1;
-                }
-                parse += atoi(&args[REGISTER_NUM]) * DEST_REGISTER;
-            }
-            /* Second - number operand */
-            else if (is_type(args, NUMBER))
-            {
-                /* Adds to memory */
-                if (first_register)
-                {
-                    code[IC] = parse;
-                    ++IC;
-                }
-                parse = 0;
-                parse += atoi(args) * DEST_REGISTER;
-            }
-            /* Second - label operand */
-            else if (is_type(args, LABELN))
-            {
-                /* Adds to memory */
-                if (first_register)
-                {
-                    code[IC] = parse;
-                    ++IC;
-                }
-                parse = 0;
-            }
-            else
-            {
-                add_front(&error_list, line_index, fname, "Unknown argument");
-                return 1;
-            }
+            if (first_cycle_parse_operand(args,1,&parse,&first_register,line_index,fname)) return 1;
             code[IC] = parse;
             ++IC;
         }
         /* Opcode with 1 operand */
         else if (opnum == NOT || opnum == CLR || (LEA < opnum && opnum < RTS))
         {
-            if (!args)
-            {
-                add_front(&error_list, line_index, fname, "Not enough arguments");
-                return 1;
-            }
-            /* Register operand */
-            if (is_type(args, REGISTER))
-            {
-                if (strlen(args) < REGISTER_SIZE)
-                {
-                    add_front(&error_list, line_index, fname, "Unknown register number");
-                    return 1;
-                }
-                else if (args[REGISTER_NUM] > '9' || args[REGISTER_NUM] < '0')
-                {
-                    add_front(&error_list, line_index, fname,
-                              "Registers represented by numbers");
-                    return 1;
-                }
-                else if (strlen(args) > REGISTER_SIZE)
-                {
-                    add_front(&error_list, line_index, fname,
-                              "Register name longer than accepted");
-                    return 1;
-                }
-                parse = atoi(&args[REGISTER_NUM]) * DEST_REGISTER;
-            }
-            /* Number operand */
-            else if (is_type(args, NUMBER))
-            {
-                parse = atoi(args) * DEST_REGISTER;
-            }
-            else if (!is_type(args, LABELN))
-            {
-                add_front(&error_list, line_index, fname, "Unknown argument");
-                return 1;
-            }
+            if (first_cycle_parse_operand(args,1,&parse,&first_register,line_index,fname)) return 1;
             code[IC] = parse;
             ++IC;
         }
@@ -235,114 +94,16 @@ int update_code(int run, char *tok, char *line_s, unsigned int line_index,
         /* Opcode with 2 operands */
         if (opnum <= SUB || opnum == LEA)
         {
-            /* First - label operand */
-            if (is_type(args, LABELN))
-            {
-                while (*curr)
-                {
-                     /* If extern passes only 1 */
-                    if (!strcmp(args, (*curr)->name) && (*curr)->type == EXTERNL)
-                    {
-                        add_label(EXTERNL, args, IC + START, &ext);
-                        parse += 1;
-                        break;
-                    }
-                    /* Passes space in memory */
-                    else if (!strcmp(args, (*curr)->name))
-                    {
-                        parse += RELOCATION;
-                        parse += (*curr)->address * DEST_REGISTER;
-                        break;
-                    }
-                    curr = &(*curr)->next;
-                }
-                if (!*curr)
-                {
-                    add_front(&error_list, line_index, fname, "Unkown label");
-                    return 1;
-                }
-                code[IC] = parse;
-            }
-            /* First - not register operand */
-            if (!is_type(args, REGISTER))
-                ++IC;
-            /* First - register operand */
-            else 
-                first_register=1;
-            
+            if(second_cycle_parse_operand(args,2,&parse,&first_register,curr,line_index,fname)) return 1;
             parse = 0;
             args = strtok(NULL, " , ");
             curr = labels;
-            /* Second - label operand */
-            if (is_type(args, LABELN))
-            {
-                while (*curr)
-                {
-                     /* If extern passes only 1 */
-                    if (!strcmp(args, (*curr)->name) && (*curr)->type == EXTERNL)
-                    {
-                        add_label(EXTERNL, args, IC + START, &ext);
-                        parse += 1;
-                        break;
-                    }
-                    /* Passes space in memory */
-                    else if (!strcmp(args, (*curr)->name))
-                    {
-                        parse += RELOCATION;
-                        parse += (*curr)->address * DEST_REGISTER;
-                        break;
-                    }
-                    curr = &(*curr)->next;
-                }
-                if (!*curr)
-                {
-                    add_front(&error_list, line_index, fname, "Unkown label");
-                    return 1;
-                }
-                /* If first argument was a register*/
-                if (first_register)
-                    ++IC;
-                code[IC] = parse;
-            }
-            /* If first argument was a register*/
-            else if (!is_type(args,REGISTER) && first_register)
-                ++IC;
-            /* Second - label operand */
-            ++IC;
+            if(second_cycle_parse_operand(args,1,&parse,&first_register,curr,line_index,fname)) return 1;
+            
         }
         /* Opcode with 1 operand */
         else if (opnum == NOT || opnum == CLR || (LEA < opnum && opnum < RTS))
-        {
-            /* Label operand */
-            if (is_type(args, LABELN))
-            {
-                while (*curr)
-                {
-                    /* If extern passes only 1 */
-                    if (!strcmp(args, (*curr)->name) && (*curr)->type == EXTERNL)
-                    {
-                        add_label(EXTERNL, args, IC + START, &ext);
-                        parse += 1;
-                        break;
-                    }
-                    /* Passes space in memory */
-                    else if (!strcmp(args, (*curr)->name))
-                    {
-                        parse += RELOCATION;
-                        parse += (*curr)->address * DEST_REGISTER;
-                        break;
-                    }
-                    curr = &(*curr)->next;
-                }
-                if (!*curr)
-                {
-                    add_front(&error_list, line_index, fname, "Unkown label");
-                    return 1;
-                }
-                code[IC] = parse;
-            }
-            ++IC;
-        }
+            if(second_cycle_parse_operand(args,1,&parse,&first_register,curr,line_index,fname)) return 1;
     }
     return 0;
 }
@@ -607,6 +368,7 @@ int update_entry(unsigned int line_index, char *fname, char *name,
     }
     return 0;
 }
+
 
 /**
  * @brief Deletes linked lists from memory

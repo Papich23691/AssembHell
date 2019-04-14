@@ -1,5 +1,6 @@
 #include "parse.h"
 #include "util.h"
+#include "memory.h"
 #include <ctype.h>
 #include <string.h>
 
@@ -288,4 +289,131 @@ int is_valid_label(char *label)
       return 0;
   }
   return 1;
+}
+
+/**
+ * @brief  Parse an operand to a create a word representing the operand
+ * 
+ * @param args The operand
+ * @param operand_num Number of operands
+ * @param parse Pointer to the parsed word
+ * @param first_register Determines if the first operand is a register
+ * @param line_index Index of the current line
+ * @param fname Name of the current file
+ * @return 1 if error
+ */
+int first_cycle_parse_operand(char * args,int operand_num, unsigned int * parse, unsigned int * first_register, int line_index,char * fname)
+{
+   if (!args)
+            {
+                add_front(&error_list, line_index, fname, "Not enough arguments");
+                return 1;
+            }
+            /* Register operand */
+            if (is_type(args, REGISTER))
+            {
+                if (strlen(args) < REGISTER_SIZE)
+                {
+                    add_front(&error_list, line_index, fname, "Unknown register number");
+                    return 1;
+                }
+                else if (args[REGISTER_NUM] > '9' || args[REGISTER_NUM] < '0')
+                {
+                    add_front(&error_list, line_index, fname,
+                              "Registers represented by numbers");
+                    return 1;
+                }
+                else if (strlen(args) > REGISTER_SIZE)
+                {
+                    add_front(&error_list, line_index, fname,
+                              "Register name longer than accepted");
+                    return 1;
+                }
+                if (--operand_num)
+                  *parse += atoi(&args[REGISTER_NUM]) * SOURCE_REGISTER;
+                else
+                  *parse += atoi(&args[REGISTER_NUM]) * DEST_REGISTER;
+                *first_register = 1;
+            }
+            /* Number operand */
+            else if (is_type(args, NUMBER))
+            {
+                if (*first_register)
+                {
+                    code[IC] = *parse;
+                    ++IC;
+                }
+                *parse=0;
+                *parse += atoi(args) * DEST_REGISTER;
+            }
+            /* Label operand */
+            else if (is_type(args, LABELN))
+            {
+              if (*first_register)
+                {
+                    code[IC] = *parse;
+                    ++IC;
+                }
+                parse = 0;
+            }
+            else
+            {
+                add_front(&error_list, line_index, fname, "Unknown argument");
+                return 1;
+            }
+            return 0;
+}
+
+/**
+ * @brief Parses labels using the label table created in first cycle
+ * 
+ * @param args The operand
+ * @param operand_num Number of operands
+ * @param parse Pointer to the parsed word
+ * @param first_register Determines if the first operand is a register
+ * @param curr Pointer to the head of the labels table
+ * @param line_index Index of the current line
+ * @param fname Name of the current file
+ * @return 1 if error
+ */
+int second_cycle_parse_operand(char * args,int operand_num, unsigned int * parse, unsigned int * first_register, label_t **curr,int line_index,char * fname){
+            /* Label operand */
+            if (is_type(args, LABELN))
+            {
+                while (*curr)
+                {
+                     /* If extern - passes only 1 */
+                    if (!strcmp(args, (*curr)->name) && (*curr)->type == EXTERNL)
+                    {
+                        add_label(EXTERNL, args, IC + START, &ext);
+                        *parse += 1;
+                        break;
+                    }
+                    /* Passes space in memory */
+                    else if (!strcmp(args, (*curr)->name))
+                    {
+                        *parse += RELOCATION;
+                        *parse += (*curr)->address * DEST_REGISTER;
+                        break;
+                    }
+                    curr = &(*curr)->next;
+                }
+                if (!*curr)
+                {
+                    add_front(&error_list, line_index, fname, "Unkown label");
+                    return 1;
+                }
+                if (*first_register)
+                    ++IC;
+                code[IC] = *parse;
+            }
+            /* If the operand it's not a register and if it's the first operand or whether the first operand was a register */
+            if (!is_type(args, REGISTER) && ((operand_num-1) || *first_register))
+                ++IC;
+            /* First - register operand */
+            else if (operand_num-1)
+                *first_register=1;
+            else
+              ++IC;
+            return 0;
 }

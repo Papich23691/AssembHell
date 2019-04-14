@@ -14,4 +14,9 @@
  */
 char *duplicate_string(const char *str);
 
+/**
+ * Prints stylish messages 
+ */
+void print_message(char * message_info , int status);
+
 #endif

@@ -16,3 +16,13 @@ char *duplicate_string(const char *str) {
 
   return new_str;
 }
+
+/**
+ * Prints stylish messages 
+ */
+void print_message(char * message_info , int status){
+  if (status)
+    printf("\033[0;31mError - %s\033[0m\n",message_info);
+  else
+    printf("\033[0;32m Successfuly assembled %s\033[0m\n", message_info);
+}

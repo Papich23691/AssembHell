@@ -38,7 +38,7 @@ void create_error_file(err_node_t *head) {
   fp = fopen("errors.txt", "w");
   if (fp) {
     while (current_node) {
-      fprintf(fp, "Error\n%s.\nFile: %s\tLine: %u\n", current_node->desc,
+      fprintf(fp, "Error - %s.\nFile: %s\tLine: %u\n\n", current_node->desc,
               current_node->fname, current_node->line);
       current_node = current_node->next;
     }
